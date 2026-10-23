@@ -6,13 +6,20 @@
 </head>
 <body>
 
+    <!-- Main application title -->
     <h1>.dots</h1>
 
+    <!-- Container element where tasks fetched from CSV will be rendered -->
     <ul id="task-list">
         <li>Loading tasks...</li>
     </ul>
 
     <script>
+        /**
+         * Asynchronously fetches the tasks.csv file from the server,
+         * parses the text response, and triggers the render pipeline.
+         * Falls back to a CORS warning if accessed via file:// protocol.
+         */
         async function loadTasks() {
             try {
                 const response = await fetch('tasks.csv');
@@ -28,6 +35,10 @@
             }
         }
 
+        /**
+         * Parses raw CSV text data into an array of task objects.
+         * Skips the header row and extracts status and title pairs.
+         */
         function parseCSV(text) {
             const rows = text.trim().split('\n');
             return rows.slice(1).map(row => {
@@ -36,6 +47,10 @@
             });
         }
 
+        /**
+         * Clears the current list and dynamically generates HTML list items
+         * for each task, applying strikethrough formatting if the status is DONE.
+         */
         function render(tasks) {
             const list = document.getElementById('task-list');
             list.innerHTML = '';
@@ -52,6 +67,7 @@
             });
         }
 
+        // Trigger initial task loading sequence on script load
         loadTasks();
     </script>
 
