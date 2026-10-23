@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>dots</title>
+</head>
+<body>
+
+    <h1>.dots</h1>
+
+    <ul id="task-list">
+        <li>Loading tasks...</li>
+    </ul>
+
+    <script>
+        async function loadTasks() {
+            try {
+                const response = await fetch('tasks.csv');
+                if (!response.ok) throw new Error();
+                const text = await response.text();
+                render(parseCSV(text));
+            } catch (err) {
+                document.getElementById('task-list').innerHTML = `
+                    <li>
+                        CORS restriction: Serve via local server to load tasks.csv. See README for instructions.
+                    </li>
+                `;
+            }
+        }
+
+        function parseCSV(text) {
+            const rows = text.trim().split('\n');
+            return rows.slice(1).map(row => {
+                const [status, title] = row.split(',');
+                return { status: status?.trim(), title: title?.trim() };
+            });
+        }
+
+        function render(tasks) {
+            const list = document.getElementById('task-list');
+            list.innerHTML = '';
+            
+            tasks.forEach(task => {
+                const li = document.createElement('li');
+                const isDone = task.status === 'DONE';
+
+                li.innerHTML = `
+                    ${isDone ? `<del>${task.title}</del>` : task.title} 
+                    <strong>[${task.status}]</strong>
+                `;
+                list.appendChild(li);
+            });
+        }
+
+        loadTasks();
+    </script>
+
+</body>
+</html>

@@ -2,4 +2,9 @@ status,title
 DONE,Ideate on and decide on a project name
 DONE,Initialize local git repository
 DONE,Create MVP zero-friction csv task backlog
-TODO,Link local repository to GitHub
+DONE,Link local repository to GitHub
+DONE,Create raw HTML index.html prototype
+DONE,Add README on how to run local test server (Live Server / npx serve / python)
+TODO,Setup Ubuntu server Docker deployment runner
+TODO,Parse CSV file and display tasks in raw HTML list
+TODO,Implement task status update and local disk writeback
