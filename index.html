@@ -45,8 +45,11 @@
         function parseCSV(text) {
             const rows = text.trim().split('\n');
             return rows.slice(1).map(row => {
-                const [status, title] = row.split(',');
-                return { status: status?.trim(), title: title?.trim() };
+                const parts = row.split(',');
+                return {
+                    status: parts[0]?.trim(),
+                    title: parts.slice(1).join(',').trim()
+                };
             });
         }
 
