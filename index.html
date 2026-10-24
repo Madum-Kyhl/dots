@@ -53,6 +53,34 @@
             });
         }
 
+        // Serializes tasks array back to CSV and POSTs to server disk
+        async function saveTasks() {
+            let csvRows = ["status,title"];
+            tasks.forEach(task => {
+                csvRows.push(`${task.status},${task.title}`);
+            });
+
+            try {
+                const response = await fetch('/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ csv: csvRows.join('\n') })
+                });
+                if (!response.ok) throw new Error('Failed to save');
+            } catch (err) {
+                console.error("Error saving tasks to disk:", err);
+            }
+        }
+
+        // Toggles a task's status from TODO to DONE, re-renders, and saves to disk
+        async function toggleTask(index) {
+            if (tasks[index].status === 'TODO') {
+                tasks[index].status = 'DONE';
+                render();
+                await saveTasks();
+            }
+        }
+
         /**
          * Clears the current list and dynamically generates HTML list items
          * for each task, applying strikethrough formatting if the status is DONE.
@@ -61,7 +89,7 @@
             const list = document.getElementById('task-list');
             list.innerHTML = '';
             
-            tasks.forEach(task => {
+            tasks.forEach((task, index) => {
                 const li = document.createElement('li');
                 const isDone = task.status === 'DONE';
 
@@ -69,6 +97,9 @@
                     ${isDone ? `<del>${task.title}</del>` : task.title} 
                     <strong>[${task.status}]</strong>
                 `;
+
+                // Bind click event to toggle state for this specific index
+                li.onclick = () => toggleTask(index);
                 list.appendChild(li);
             });
         }

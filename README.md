@@ -2,30 +2,28 @@
 
 A minimal, raw-HTML (WIP) task workspace.
 
-## Running Locally
+## Prerequisites and Installation
 
-Because modern browsers block local file loading (`file://`) via CORS security policies, serve the directory locally using one of these zero-config methods:
+To run `.dots` workspace locally with full disk persistence (or via container), you need **Node.js** and **Docker** installed.
 
-### Option 1: Node.js (Recommended — Supports LAN Access)
+### Install Node.js
 
-To install Node.js run `winget install OpenJS.NodeJS.LTS`
-In the project root run `npx serve`
-> Note: If `npx` is not recognized, refresh your terminal path: `$env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")`
+Run `winget install OpenJS.NodeJS.LTS`
+> Note: If `node` is not recognized, refresh your terminal path: `$env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")`
 
-### Option 2: VS Code Live Server
+### Install Docker
 
-Install the *Live Server* extension by Ritwick Dey in VS Code.
-Right-click `index.html` in the sidebar and select **Open with Live Server**.
-
-### option 3: Python
-
-In the project root run `python -m http.server 3000`
-
-## Running locally via Docker
-
-To install Docker Desktop run `winget install Docker.DockerDesktop` (can be skipped if already installed)
+Run `winget install Docker.DockerDesktop`
 > Note: If `docker` is not recognized, refresh your terminal path: `$env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")`
 > Note: Docker Desktop requires the Virtual Machine Platform feature enabled. If you encounter a backend error, run this command in an **Administrator PowerShell** and restart your computer: `Enable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform`
+
+## Running Locally (Node.js)
+
+Run `node server.js`
+Open your browser and navigate to <http://localhost:8080>
+> Note: To stop the server and free up your terminal, press **`Ctrl + C`**.
+
+## Running Docker
 
 ### Using Docker Compose (Recommended)
 
@@ -37,7 +35,7 @@ To tear down the container run `docker compose down`
 ### Using manual Docker workflow
 
 To build the Docker image run `docker build -t dots:latest .`
-To map the port 8080 run `docker run -d -p 8080:80 --name dots-local dots:latest`
+To run the container and map port 8080 run `docker run -d -p 8080:8080 --name dots-local dots:latest`
 
 ### Cleaning up Docker builds
 
@@ -51,5 +49,3 @@ To clone the repository run `git clone https://github.com/Madum-Kyhl/dots.git` t
 To build and start in background mode run `docker compose up -d --build`
 To access your app open your browser and navigate to <http://{your-server-ip-address}:8080>
 To tear down the container run `docker compose down`
-To stop the local container run `docker stop dots-local`
-To remove the local container run `docker rm dots-local`

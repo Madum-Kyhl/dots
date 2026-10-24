@@ -7,5 +7,5 @@ DONE,Create raw HTML index.html prototype
 DONE,Parse CSV file and display tasks in raw HTML list
 DONE,Add README on how to run local test server (Live Server / npx serve / python)
 DONE,Setup Ubuntu server Docker deployment runner
-TODO,Implement task status update and local disk writeback
+DONE,Implement task status update and local disk writeback
 TODO,Refactor and organize code into modules
