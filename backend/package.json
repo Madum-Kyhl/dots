@@ -1,6 +1,11 @@
 {
   "name": "dots-backend",
-  "version": "1.0.0",
+  "version": "0.3.0",
+  "private": true,
   "type": "commonjs",
-  "private": true
+  "description": "Backend server for dots workspace with SQLite persistence",
+  "main": "server.js",
+  "dependencies": {
+    "sqlite3": "^5.1.7"
+  }
 }
