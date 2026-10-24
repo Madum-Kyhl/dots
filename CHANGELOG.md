@@ -54,3 +54,18 @@ All notable changes to this project will be documented in this file.
 - Schema expansion to include task priority and explicit `created_at` timestamps.
 - Table/column sorting and filtering controls in the UI.
 - Finalized documentation, environment configuration profiles, and robust error handling.
+
+## [0.3.1] - 2026-10-25
+
+### Added
+
+- `.dockerignore` file to optimize the Docker build context and exclude unnecessary workspace files.
+
+### Changed
+
+- Updated root `.gitignore` to comprehensively ignore the `data/` directory and SQLite database files.
+- Refined `README.md` by removing obsolete legacy data migration instructions.
+
+### Removed
+
+- Legacy `tasks.csv` file and `data/migrate.js` migration script now that SQLite auto-initialization is fully established.

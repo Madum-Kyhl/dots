@@ -1,2 +1,8 @@
-backend/node_modules/
-data/dots.db
+# Node dependencies
+node_modules/
+**/node_modules/
+
+# SQLite databases and data files
+data/
+*.db
+*.db-journal
