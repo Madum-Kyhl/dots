@@ -8,4 +8,5 @@ DONE,Parse CSV file and display tasks in raw HTML list
 DONE,Add README on how to run local test server (Live Server / npx serve / python)
 DONE,Setup Ubuntu server Docker deployment runner
 DONE,Implement task status update and local disk writeback
-TODO,Refactor and organize code into modules
+DONE,Refactor and organize code into modules
+TODO,Ideate on next items

@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   dots:
     container_name: dots-local
@@ -11,4 +9,4 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./tasks.csv:/app/tasks.csv
+      - ./data/tasks.csv:/app/data/tasks.csv

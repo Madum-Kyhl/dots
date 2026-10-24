@@ -3,6 +3,8 @@ const fs = require('fs');
 const path = require('path');
 
 const PORT = 8080;
+const DATA_FILE = path.join(process.cwd(), 'data/tasks.csv');
+const PUBLIC_DIR = path.join(process.cwd(), 'frontend');
 
 http.createServer((req, res) => {
     // Handle POST request to save tasks back to CSV on disk
@@ -12,7 +14,7 @@ http.createServer((req, res) => {
         req.on('end', () => {
             try {
                 const { csv } = JSON.parse(body);
-                fs.writeFileSync('tasks.csv', csv, 'utf8');
+                fs.writeFileSync(DATA_FILE, csv, 'utf8');
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ status: 'success' }));
             } catch (err) {
@@ -23,8 +25,17 @@ http.createServer((req, res) => {
         return;
     }
 
-    // Serve static files (index.html, tasks.csv, etc.)
-    let filePath = path.join(__dirname, req.url === '/' ? 'index.html' : req.url);
+// Serve tasks.csv directly if requested
+    if (req.url === '/tasks.csv') {
+        fs.readFile(DATA_FILE, (err, content) => {
+            if (err) { res.writeHead(404); res.end('Not found'); }
+            else { res.writeHead(200, { 'Content-Type': 'text/csv' }); res.end(content); }
+        });
+        return;
+    }
+
+    // Serve static frontend files
+    let filePath = path.join(PUBLIC_DIR, req.url === '/' ? 'index.html' : req.url);
     fs.readFile(filePath, (err, content) => {
         if (err) {
             res.writeHead(404, { 'Content-Type': 'text/plain' });

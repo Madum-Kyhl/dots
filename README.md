@@ -36,9 +36,6 @@ To tear down the container run `docker compose down`
 
 To build the Docker image run `docker build -t dots:latest .`
 To run the container and map port 8080 run `docker run -d -p 8080:8080 --name dots-local dots:latest`
-
-### Cleaning up Docker builds
-
 To stop the local container run `docker stop dots-local`
 To remove the local container run `docker rm dots-local`
 
