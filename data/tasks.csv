@@ -13,8 +13,8 @@ DONE,Ideate on next items
 DONE,Add "New Task" input form
 DONE,Split frontend into state.js (data management) and ui.js (DOM rendering)
 DONE,Dual-box layout (TODO column vs. DONE column)
-TODO,Replace CSV storage with sqlite3
-TODO,Auto-initialize schema on server startup
+DONE,Replace CSV storage with sqlite3
+DONE,Auto-initialize schema on server startup
 TODO,Add .dockerignore and update .gitignore for data/
 TODO,Add GitHub Actions workflow (ci.yml) to test Node builds
 TODO,Enforce PR reviews and status checks on main
