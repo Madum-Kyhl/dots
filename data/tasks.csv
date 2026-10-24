@@ -10,9 +10,9 @@ DONE,Setup Ubuntu server Docker deployment runner
 DONE,Implement task status update and local disk writeback
 DONE,Refactor and organize code into modules
 DONE,Ideate on next items
-TODO,Add "New Task" input form
-TODO,Split frontend into state.js (data management) and ui.js (DOM rendering)
-TODO,Dual-box layout (TODO column vs. DONE column)
+DONE,Add "New Task" input form
+DONE,Split frontend into state.js (data management) and ui.js (DOM rendering)
+DONE,Dual-box layout (TODO column vs. DONE column)
 TODO,Replace CSV storage with sqlite3
 TODO,Auto-initialize schema on server startup
 TODO,Add .dockerignore and update .gitignore for data/
