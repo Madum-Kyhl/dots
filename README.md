@@ -1,6 +1,12 @@
 # .dots
 
-A minimal, raw-HTML (WIP) task workspace.
+A lightweight, local-first, containerized task management application designed for simplicity, speed, and strict modularity.
+
+## Architecture and Tech Stack
+
+- **Backend**: Node.js REST API using SQLite (`sqlite3`) for robust data persistence.
+- **Frontend**: ES Module-based architecture (`app.js`, `state.js`, `ui.js`) interacting via REST endpoints (`/api/tasks`).
+- **Containerization**: Docker and Docker Compose with volume mapping for persistent data storage (`/app/data`).
 
 ## Prerequisites and Installation
 
@@ -10,6 +16,13 @@ To run `.dots` workspace locally with full disk persistence (or via container), 
 
 Run `winget install OpenJS.NodeJS.LTS`
 > Note: If `node` is not recognized, refresh your terminal path: `$env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")`
+
+### Install sqlite3
+
+```bash
+cd backend
+npm install sqlite3
+```
 
 ### Install Docker
 
@@ -46,4 +59,12 @@ To clone the repository run `git clone https://github.com/Madum-Kyhl/dots.git` t
 To build and start in background mode run `docker compose up -d --build`
 To access your app open your browser and navigate to <http://{your-server-ip-address}:8080>
 To tear down the container run `docker compose down`
-test
+
+## Data Migration
+
+To migrate legacy data from `tasks.csv` to the SQLite database (`dots.db`), run the migration script `node data/migrate.js`
+Or run it inside the running container using `docker exec -it dots-local node data/migrate.js`
+
+## Versioning and Changelog
+
+See CHANGELOG.md for a detailed history of changes across versions.
