@@ -46,3 +46,4 @@ To clone the repository run `git clone https://github.com/Madum-Kyhl/dots.git` t
 To build and start in background mode run `docker compose up -d --build`
 To access your app open your browser and navigate to <http://{your-server-ip-address}:8080>
 To tear down the container run `docker compose down`
+test
