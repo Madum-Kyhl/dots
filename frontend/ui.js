@@ -9,29 +9,28 @@ export function renderUI() {
     todoContainer.innerHTML = '';
     doneContainer.innerHTML = '';
 
-    tasks.forEach((task, index) => {
+    tasks.forEach((task) => {
         const tr = document.createElement('tr');
 
         if (task.status === 'TODO') {
             tr.innerHTML = `
                 <td>${escapeHTML(task.title)}</td>
-                <td><button data-index="${index}" class="toggle-btn">Mark Done</button></td>
+                <td><button data-id="${task.id}" class="toggle-btn">Mark Done</button></td>
             `;
             todoContainer.appendChild(tr);
         } else {
             tr.innerHTML = `
                 <td><del>${escapeHTML(task.title)}</del></td>
-                <td><button data-index="${index}" class="toggle-btn">Reopen</button></td>
+                <td><button data-id="${task.id}" class="toggle-btn">Reopen</button></td>
             `;
             doneContainer.appendChild(tr);
         }
     });
 
-    // Bind action listeners to all dynamic buttons
     document.querySelectorAll('.toggle-btn').forEach(btn => {
         btn.onclick = async (e) => {
-            const idx = parseInt(e.target.getAttribute('data-index'), 10);
-            await toggleTaskStatus(idx);
+            const id = e.target.getAttribute('data-id');
+            await toggleTaskStatus(id);
             renderUI();
         };
     });

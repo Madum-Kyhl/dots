@@ -2,10 +2,9 @@ export let tasks = [];
 
 export async function loadTasks() {
     try {
-        const response = await fetch('/tasks.csv');
-        if (!response.ok) throw new Error('Failed to fetch CSV');
-        const text = await response.text();
-        tasks = parseCSV(text);
+        const response = await fetch('/api/tasks');
+        if (!response.ok) throw new Error('Failed to fetch tasks from API');
+        tasks = await response.json();
         return tasks;
     } catch (err) {
         console.error("Error loading tasks:", err);
@@ -13,43 +12,31 @@ export async function loadTasks() {
     }
 }
 
-export function parseCSV(text) {
-    const rows = text.trim().split('\n');
-    return rows.slice(1).map(row => {
-        const parts = row.split(',');
-        return {
-            status: parts[0]?.trim() || 'TODO',
-            title: parts.slice(1).join(',').trim()
-        };
-    }).filter(task => task.title.length > 0);
-}
-
-export async function saveTasks() {
-    let csvRows = ["status,title"];
-    tasks.forEach(task => {
-        csvRows.push(`${task.status},${task.title}`);
-    });
-
+export async function addTask(title) {
     try {
-        const response = await fetch('/save', {
+        const response = await fetch('/api/tasks', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ csv: csvRows.join('\n') })
+            body: JSON.stringify({ title })
         });
-        if (!response.ok) throw new Error('Failed to save tasks');
+        if (!response.ok) throw new Error('Failed to add task');
+        const newTask = await response.json();
+        tasks.push(newTask);
     } catch (err) {
-        console.error("Error saving tasks:", err);
+        console.error("Error adding task:", err);
     }
 }
 
-export async function addTask(title) {
-    tasks.push({ status: 'TODO', title });
-    await saveTasks();
-}
-
-export async function toggleTaskStatus(index) {
-    if (tasks[index]) {
-        tasks[index].status = tasks[index].status === 'TODO' ? 'DONE' : 'TODO';
-        await saveTasks();
+export async function toggleTaskStatus(id) {
+    try {
+        const response = await fetch(`/api/tasks/${id}/toggle`, {
+            method: 'POST'
+        });
+        if (!response.ok) throw new Error('Failed to toggle task');
+        const updated = await response.json();
+        const task = tasks.find(t => t.id == id);
+        if (task) task.status = updated.status;
+    } catch (err) {
+        console.error("Error toggling task status:", err);
     }
 }
