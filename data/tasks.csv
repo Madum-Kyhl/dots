@@ -9,4 +9,15 @@ DONE,Add README on how to run local test server (Live Server / npx serve / pytho
 DONE,Setup Ubuntu server Docker deployment runner
 DONE,Implement task status update and local disk writeback
 DONE,Refactor and organize code into modules
-TODO,Ideate on next items
+DONE,Ideate on next items
+DONE,Add "New Task" input form
+DONE,Split frontend into state.js (data management) and ui.js (DOM rendering)
+DONE,Dual-box layout (TODO column vs. DONE column)
+TODO,Replace CSV storage with sqlite3
+TODO,Auto-initialize schema on server startup
+TODO,Add .dockerignore and update .gitignore for data/
+TODO,Add GitHub Actions workflow (ci.yml) to test Node builds
+TODO,Enforce PR reviews and status checks on main
+TODO,Expand schema to include priority and created_at
+TODO,Table/column sorting and filtering controls
+TODO,Finalized documentation and environment config profiles and robust error handling

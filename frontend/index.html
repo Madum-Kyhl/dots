@@ -2,13 +2,49 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>dots</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>.dots v0.2.0-beta</title>
 </head>
 <body>
     <h1>.dots</h1>
-    <ul id="task-list">
-        <li>Loading tasks...</li>
-    </ul>
-    <script src="app.js"></script>
+
+    <!-- Task Creation Form -->
+    <form id="add-task-form" style="margin-bottom: 20px;">
+        <input type="text" id="task-title-input" placeholder="Enter new task title..." required style="width: 300px; padding: 5px;">
+        <button type="submit" style="padding: 5px 10px;">Add Task</button>
+    </form>
+
+    <hr>
+
+    <!-- Side-by-Side Table Layout -->
+    <div style="display: flex; gap: 40px; align-items: flex-start;">
+        <div style="flex: 1;">
+            <h2>Pending Tasks (TODO)</h2>
+            <table border="1" cellpadding="8" cellspacing="0" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th>Task</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="todo-table-body"></tbody>
+            </table>
+        </div>
+
+        <div style="flex: 1;">
+            <h2>Completed Tasks (DONE)</h2>
+            <table border="1" cellpadding="8" cellspacing="0" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th>Task</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="done-table-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script type="module" src="app.js"></script>
 </body>
 </html>
