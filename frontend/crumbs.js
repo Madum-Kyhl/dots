@@ -1,8 +1,10 @@
+// frontend/crumbs.js
+
 let selectedWeek = 44;
 const CURRENT_WEEK_NUM = 44;
+const participantsList = ["J", "M", "V", "L", "Z", "G"];
 
 document.addEventListener("DOMContentLoaded", () => {
-    // Only initialize if crumbs view elements exist
     if (!document.getElementById("mealsContainer")) return;
 
     loadWeek(selectedWeek);
@@ -28,7 +30,6 @@ async function loadWeek(weekNum) {
         renderCrumbs(data, weekNum);
     } catch (err) {
         console.error("Error loading crumbs:", err);
-        // Fallback or empty state render if API isn't fully wired yet
         document.getElementById("mealsContainer").innerHTML = `
             <p class="text-xs text-slate-400 text-center py-8">Kunne ikke hente madplan for uge ${weekNum}.</p>
         `;
@@ -49,7 +50,46 @@ function renderCrumbs(mealPlanData, weekNum) {
         const card = document.createElement("div");
         card.className = `p-5 sm:p-6 rounded-2xl transition-all duration-200 flex flex-col justify-between ${cardClasses}`;
 
-        // Participants badges rendering loop can be wired here based on item.signups
+        // Map signups if available from backend, otherwise default everyone to 'yes' (attending)
+        const signupsMap = {};
+        if (item.signups) {
+            item.signups.forEach(s => {
+                signupsMap[s.initials] = { status: s.status, note: s.note };
+            });
+        }
+
+        const participantsHTML = participantsList.map(initial => {
+            const info = signupsMap[initial] || { status: "yes" };
+            const status = info.status;
+            const note = info.note ? ` (${info.note})` : "";
+
+            let circleStyle = "";
+            let tooltipText = "";
+
+            if (status === "yes" || status === "attending") {
+                circleStyle = "bg-slate-900 text-white border border-slate-900";
+                tooltipText = `${initial}: Spiser med${note}`;
+            } else if (status === "maybe") {
+                circleStyle = "bg-amber-400 text-slate-900 font-extrabold border-2 border-amber-500 ring-2 ring-amber-100";
+                tooltipText = `${initial}: Måske${note}`;
+            } else { 
+                circleStyle = "bg-slate-200 text-slate-400 line-through border border-slate-300 opacity-60";
+                tooltipText = `${initial}: Spiser ikke med${note}`;
+            }
+
+            return `
+                <div class="tooltip-trigger relative inline-block" tabindex="0">
+                    <div class="w-7 h-7 rounded-full ${circleStyle} flex items-center justify-center shadow-sm transition-transform cursor-pointer hover:scale-110">
+                        <span class="text-xs font-bold leading-none">${initial}</span>
+                    </div>
+                    <div class="tooltip-content absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1 bg-slate-900 text-white text-[11px] font-medium rounded-lg whitespace-nowrap shadow-xl z-20 pointer-events-none">
+                        ${tooltipText}
+                        <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900"></div>
+                    </div>
+                </div>
+            `;
+        }).join("");
+
         card.innerHTML = `
             <div class="flex items-center justify-between mb-2">
                 <div class="flex items-center space-x-2">
@@ -79,6 +119,9 @@ function renderCrumbs(mealPlanData, weekNum) {
                         <span class="text-slate-400 font-medium">Kok: </span>
                         <span class="font-bold text-slate-900">${item.chef_name || 'Ikke tildelt'}</span>
                     </div>
+                </div>
+                <div class="flex items-center space-x-1 sm:space-x-1.5">
+                    ${participantsHTML}
                 </div>
             </div>
         `;

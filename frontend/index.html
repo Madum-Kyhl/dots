@@ -17,7 +17,17 @@
             font-family: 'Inter', sans-serif;
             background-color: #ffffff;
         }
-    </style>
+        /* Tooltip styling for hover & focus */
+        .tooltip-trigger .tooltip-content {
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.15s ease-in-out, visibility 0.15s ease-in-out;
+        }
+        .tooltip-trigger:hover .tooltip-content,
+        .tooltip-trigger:focus-within .tooltip-content {
+            visibility: visible;
+            opacity: 1;
+        }    </style>
 </head>
 <body class="bg-white min-h-screen text-slate-800 antialiased selection:bg-emerald-100 selection:text-emerald-900">
 
