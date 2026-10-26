@@ -51,19 +51,40 @@ function renderCrumbs(mealPlanData, weekNum) {
     const day = String(todayObj.getDate()).padStart(2, '0');
     const todayString = `${year}-${month}-${day}`;
 
-    mealPlanData.forEach((item) => {
-        const isToday = (item.date === todayString);
+    // Standard list of weekdays in Danish if the database is missing days
+    const standardDays = ["Mandag", "Tirsdag", "Onsdag", "Torsdag", "Fredag", "Lørdag", "Søndag"];
+
+    // Create a lookup map of the data received from the backend based on day name or date
+    const planMap = {};
+    if (Array.isArray(mealPlanData)) {
+        mealPlanData.forEach(item => {
+            planMap[item.day_name] = item;
+        });
+    }
+
+    // Always iterate through all 7 days to ensure the week appears complete
+    standardDays.forEach((dayName) => {
+        const item = planMap[dayName];
+        const isMissing = !item || !item.meal_title; // Tjek om dagen mangler data
+
+        const isToday = item && (item.date === todayString);
         
-        const cardClasses = isToday
-            ? "border-2 border-emerald-500 bg-[#f4fbf4] shadow-md shadow-emerald-500/10"
-            : "border border-slate-200/90 bg-slate-50/40 hover:bg-slate-50 shadow-sm";
+        // Select classes: Dashed and muted if missing, otherwise normal/highlighted
+        let cardClasses = "";
+        if (isToday) {
+            cardClasses = "border-2 border-emerald-500 bg-[#f4fbf4] shadow-md shadow-emerald-500/10";
+        } else if (isMissing) {
+            cardClasses = "border-2 border-dashed border-slate-200 bg-slate-50/20 opacity-75 shadow-none";
+        } else {
+            cardClasses = "border-2 border-slate-200/90 bg-slate-50/40 hover:bg-slate-50 shadow-sm";
+        }
 
         const card = document.createElement("div");
-        card.className = `p-5 sm:p-6 rounded-2xl transition-all duration-200 flex flex-col justify-between ${cardClasses}`;
+        card.className = `p-5 sm:p-6 rounded-2xl transition-all duration-200 flex flex-col justify-between min-h-[170px] ${cardClasses}`;
 
         // Map signups if available from backend, otherwise default everyone to 'yes' (attending)
         const signupsMap = {};
-        if (item.signups) {
+        if (item && item.signups) {
             item.signups.forEach(s => {
                 signupsMap[s.initials] = { status: s.status, note: s.note };
             });
@@ -101,11 +122,14 @@ function renderCrumbs(mealPlanData, weekNum) {
             `;
         }).join("");
 
+        const mealTitle = isMissing ? "Ikke planlagt endnu..." : item.meal_title;
+        const chefName = isMissing ? "Ikke tildelt" : (item.chef_name || 'Ikke tildelt');
+
         card.innerHTML = `
             <div class="flex items-center justify-between mb-2">
                 <div class="flex items-center space-x-2">
                     <span class="text-xs font-extrabold uppercase tracking-wider ${isToday ? 'text-emerald-800' : 'text-slate-400'}">
-                        ${item.day_name}
+                        ${dayName}
                     </span>
                     ${isToday ? `
                         <span class="px-2 py-0.5 text-[10px] font-bold bg-emerald-600 text-white rounded-md tracking-wide flex items-center gap-1">
@@ -113,22 +137,27 @@ function renderCrumbs(mealPlanData, weekNum) {
                             I DAG
                         </span>
                     ` : ''}
+                    ${isMissing ? `
+                        <span class="px-2 py-0.5 text-[10px] font-semibold bg-slate-200 text-slate-500 rounded-md tracking-wide">
+                            MANGLER
+                        </span>
+                    ` : ''}
                 </div>
                 <i data-lucide="utensils-crossed" class="w-4 h-4 ${isToday ? 'text-emerald-600' : 'text-slate-300'}"></i>
             </div>
             <div class="mb-5">
-                <h3 class="text-lg sm:text-xl font-bold ${isToday ? 'text-slate-900' : 'text-slate-800'} tracking-tight leading-snug">
-                    ${item.meal_title}
+                <h3 class="text-lg sm:text-xl font-bold ${isMissing ? 'text-slate-400 italic font-medium' : (isToday ? 'text-slate-900' : 'text-slate-800')} tracking-tight leading-snug">
+                    ${mealTitle}
                 </h3>
             </div>
             <div class="flex items-center justify-between pt-3 border-t ${isToday ? 'border-emerald-200/80' : 'border-slate-200/60'}">
                 <div class="flex items-center space-x-2">
-                    <div class="w-6 h-6 rounded-full ${isToday ? 'bg-emerald-200 text-emerald-800' : 'bg-slate-200 text-slate-700'} flex items-center justify-center shadow-sm">
+                    <div class="w-6 h-6 rounded-full ${isToday ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'} flex items-center justify-center shadow-sm">
                         <i data-lucide="chef-hat" class="w-3.5 h-3.5"></i>
                     </div>
                     <div class="text-xs">
                         <span class="text-slate-400 font-medium">Kok: </span>
-                        <span class="font-bold text-slate-900">${item.chef_name || 'Ikke tildelt'}</span>
+                        <span class="font-bold ${isMissing ? 'text-slate-400' : 'text-slate-900'}">${chefName}</span>
                     </div>
                 </div>
                 <div class="flex items-center space-x-1 sm:space-x-1.5">
