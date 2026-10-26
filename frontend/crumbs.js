@@ -82,7 +82,7 @@ function renderCrumbs(mealPlanData, weekNum) {
         const card = document.createElement("div");
         card.className = `p-5 sm:p-6 rounded-2xl transition-all duration-200 flex flex-col justify-between min-h-[170px] ${cardClasses}`;
 
-        // Map signups if available from backend, otherwise default everyone to 'yes' (attending)
+        // Map signups if available from backend, otherwise default everyone to 'unanswered'
         const signupsMap = {};
         if (item && item.signups) {
             item.signups.forEach(s => {
@@ -91,28 +91,32 @@ function renderCrumbs(mealPlanData, weekNum) {
         }
 
         const participantsHTML = participantsList.map(initial => {
-            const info = signupsMap[initial] || { status: "yes" };
+            const info = signupsMap[initial] || { status: "unanswered" };
             const status = info.status;
             const note = info.note ? ` (${info.note})` : "";
 
             let circleStyle = "";
             let tooltipText = "";
+            let innerText = initial;
 
-            if (status === "yes" || status === "attending") {
+            if (status === "yes") {
                 circleStyle = "bg-slate-900 text-white border border-slate-900";
                 tooltipText = `${initial}: Spiser med${note}`;
             } else if (status === "maybe") {
                 circleStyle = "bg-amber-400 text-slate-900 font-extrabold border-2 border-amber-500 ring-2 ring-amber-100";
                 tooltipText = `${initial}: Måske${note}`;
-            } else { 
-                circleStyle = "bg-slate-200 text-slate-400 line-through border border-slate-300 opacity-60";
-                tooltipText = `${initial}: Spiser ikke med${note}`;
+            } else if (status === "no") {
+                circleStyle = "bg-rose-100 text-rose-700 border border-rose-300 line-through";
+                tooltipText = `${initial}: Afbud${note}`;
+            } else {
+                circleStyle = "bg-slate-50 text-slate-400 border border-dashed border-slate-300";
+                tooltipText = `${initial}: Ubesvaret`;
             }
 
             return `
                 <div class="tooltip-trigger relative inline-block" tabindex="0">
                     <div class="w-7 h-7 rounded-full ${circleStyle} flex items-center justify-center shadow-sm transition-transform cursor-pointer hover:scale-110">
-                        <span class="text-xs font-bold leading-none">${initial}</span>
+                        <span class="text-xs font-bold leading-none">${innerText}</span>
                     </div>
                     <div class="tooltip-content absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1 bg-slate-900 text-white text-[11px] font-medium rounded-lg whitespace-nowrap shadow-xl z-20 pointer-events-none">
                         ${tooltipText}

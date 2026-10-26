@@ -57,7 +57,7 @@ db.serialize(() => {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             crumb_id INTEGER NOT NULL,
             user_id INTEGER NOT NULL,
-            status TEXT NOT NULL CHECK(status IN ('attending', 'rejected', 'maybe')),
+            status TEXT NOT NULL CHECK(status IN ('yes', 'no', 'maybe')),
             note TEXT,
             FOREIGN KEY (crumb_id) REFERENCES crumbs(id) ON DELETE CASCADE,
             FOREIGN KEY (user_id) REFERENCES users(id),

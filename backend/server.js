@@ -78,7 +78,7 @@ http.createServer((req, res) => {
         return;
     }
 
-    // API: Get crumbs (meals) for a specific week
+    // API: Get crumbs (meals) for a specific week with signups
     if (pathname === '/api/crumbs' && req.method === 'GET') {
         const weekNum = parsedUrl.searchParams.get('week') || '44';
         
@@ -90,14 +90,50 @@ http.createServer((req, res) => {
             ORDER BY c.id ASC
         `;
 
-        db.all(query, [weekNum], (err, rows) => {
+        db.all(query, [weekNum], (err, crumbs) => {
             if (err) {
                 res.writeHead(500, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ error: err.message }));
                 return;
             }
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify(rows));
+
+            if (crumbs.length === 0) {
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify([]));
+                return;
+            }
+
+            const crumbIds = crumbs.map(c => c.id);
+            const placeholders = crumbIds.map(() => '?').join(',');
+            
+            const signupsQuery = `
+                SELECT s.crumb_id, s.status, s.note, u.initials
+                FROM crumb_signups s
+                JOIN users u ON s.user_id = u.id
+                WHERE s.crumb_id IN (${placeholders})
+            `;
+
+            db.all(signupsQuery, crumbIds, (err, signups) => {
+                if (err) {
+                    res.writeHead(500, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: err.message }));
+                    return;
+                }
+
+                const result = crumbs.map(crumb => {
+                    const crumbSignups = signups
+                        .filter(s => s.crumb_id === crumb.id)
+                        .map(s => ({ initials: s.initials, status: s.status, note: s.note }));
+
+                    return {
+                        ...crumb,
+                        signups: crumbSignups
+                    };
+                });
+
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify(result));
+            });
         });
         return;
     }
