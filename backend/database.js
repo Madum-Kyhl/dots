@@ -16,7 +16,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
     }
 });
 
-// Initialize schema
+// Initialize full schema once
 db.serialize(() => {
     // 1. Core task management table
     db.run(`
@@ -57,7 +57,8 @@ db.serialize(() => {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             crumb_id INTEGER NOT NULL,
             user_id INTEGER NOT NULL,
-            status TEXT NOT NULL CHECK(status IN ('attending', 'rejected')),
+            status TEXT NOT NULL CHECK(status IN ('attending', 'rejected', 'maybe')),
+            note TEXT,
             FOREIGN KEY (crumb_id) REFERENCES crumbs(id) ON DELETE CASCADE,
             FOREIGN KEY (user_id) REFERENCES users(id),
             UNIQUE(crumb_id, user_id)
