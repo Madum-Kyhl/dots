@@ -39,11 +39,11 @@
                 <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">v0.4.0</span>
             </div>
             <div class="flex items-center space-x-2 bg-slate-100 p-1 rounded-xl">
-                <button id="navTasksBtn" onclick="switchView('tasks')" class="px-4 py-1.5 text-xs font-bold rounded-lg bg-white text-slate-900 shadow-sm transition-all">
-                    Tasks
+                <button id="navTasksBtn" disabled class="px-4 py-1.5 text-xs font-bold rounded-lg text-slate-400 cursor-not-allowed opacity-60 transition-all">
+                    .dots
                 </button>
-                <button id="navCrumbsBtn" onclick="switchView('crumbs')" class="px-4 py-1.5 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-900 transition-all">
-                    Crumbs  crumbs
+                <button id="navCrumbsBtn" onclick="switchView('crumbs')" class="px-4 py-1.5 text-xs font-bold rounded-lg bg-white text-slate-900 shadow-sm transition-all">
+                    crumbs
                 </button>
             </div>
         </div>
@@ -52,8 +52,8 @@
     <!-- Main Container -->
     <div class="max-w-3xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
         
-        <!-- TASKS VIEW -->
-        <section id="tasks-view" class="space-y-6">
+        <!-- TASKS VIEW (deactivated as default) -->
+        <section id="tasks-view" class="hidden space-y-6">
             <h1 class="text-2xl font-bold tracking-tight text-slate-900">Task Manager</h1>
 
             <!-- Task Creation Form -->
@@ -87,7 +87,7 @@
         </section>
 
         <!-- CRUMBS VIEW (Meal Planner) -->
-        <section id="crumbs-view" class="hidden space-y-6">
+        <section id="crumbs-view" class="space-y-6">
             <!-- Top Header -->
             <header class="flex flex-col sm:flex-row items-center justify-between pb-6 mb-8 border-b border-slate-100 gap-4">
                 <div class="flex items-center space-x-3">
@@ -95,8 +95,12 @@
                         <i data-lucide="utensils" class="w-6 h-6"></i>
                     </div>
                     <div>
-                        <h1 class="text-2xl font-bold tracking-tight text-slate-900">Weekly Table</h1>
-                        <p class="text-xs font-medium text-slate-500">Shared family & group meal schedule</p>
+                        <h1 class="text-2xl font-bold tracking-tight text-slate-900">Madplanen</h1>
+                        <p class="text-xs font-medium text-slate-500">
+                            <a href="https://www.youtube.com/watch?v=6ayhqIyfu50" target="_blank" class="hover:underline">
+                                Hold dig i form, spis sundt og tro på dig selv! YEAH! - Asbjørn Riis
+                            </a>
+                        </p>
                     </div>
                 </div>
 
@@ -122,7 +126,14 @@
 
     <!-- View Switcher Script -->
     <script>
+        // Ensureing that crumbs is shown as default upon load
+        document.addEventListener("DOMContentLoaded", () => {
+            switchView('crumbs');
+        });
+
         function switchView(view) {
+            if (view === 'tasks') return; // Locked .dots - remove line again when it can be activated
+
             const tasksView = document.getElementById('tasks-view');
             const crumbsView = document.getElementById('crumbs-view');
             const navTasksBtn = document.getElementById('navTasksBtn');
