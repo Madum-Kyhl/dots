@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="da">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Weekly Meal Plan</title>
+  <title>Ugentlig Madplan</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Google Fonts Inter -->
@@ -17,186 +17,292 @@
       font-family: 'Inter', sans-serif;
       background-color: #ffffff;
     }
+    /* Tooltip styling for hover & focus */
+    .tooltip-trigger .tooltip-content {
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.15s ease-in-out, visibility 0.15s ease-in-out;
+    }
+    .tooltip-trigger:hover .tooltip-content,
+    .tooltip-trigger:focus-within .tooltip-content {
+      visibility: visible;
+      opacity: 1;
+    }
   </style>
 </head>
 <body class="bg-white min-h-screen text-slate-800 antialiased selection:bg-emerald-100 selection:text-emerald-900">
 
-  <!-- Main Container -->
+  <!-- Hovedcontainer -->
   <div class="max-w-3xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
     
-    <!-- Top Header -->
+    <!-- Top Overskrift & Navigation -->
     <header class="flex flex-col sm:flex-row items-center justify-between pb-6 mb-8 border-b border-slate-100 gap-4">
       <div class="flex items-center space-x-3">
         <div class="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl">
           <i data-lucide="utensils" class="w-6 h-6"></i>
         </div>
         <div>
-          <h1 class="text-2xl font-bold tracking-tight text-slate-900">Weekly Table</h1>
-          <p class="text-xs font-medium text-slate-500">Shared family & group meal schedule</p>
+          <h1 class="text-2xl font-bold tracking-tight text-slate-900">Madoversigt</h1>
+          <p class="text-xs font-medium text-slate-500">Fælles madplan for husstanden</p>
         </div>
       </div>
 
-      <!-- Week Switcher Controls -->
-      <div class="flex items-center space-x-3 bg-slate-50 p-1.5 rounded-2xl border border-slate-200/80 shadow-sm">
-        <button id="prevWeekBtn" class="p-2 rounded-xl bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 active:scale-95 transition-all duration-150 shadow-sm border border-slate-200/60 flex items-center justify-center">
-          <i data-lucide="chevron-left" class="w-5 h-5"></i>
-        </button>
-        
-        <div class="px-4 text-center min-w-[110px]">
-          <span id="weekLabel" class="text-base font-bold text-slate-900 tracking-wide block">Week 43</span>
-          <span id="yearLabel" class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">Oct 2026</span>
-        </div>
-
-        <button id="nextWeekBtn" class="p-2 rounded-xl bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 active:scale-95 transition-all duration-150 shadow-sm border border-slate-200/60 flex items-center justify-center">
-          <i data-lucide="chevron-right" class="w-5 h-5"></i>
-        </button>
+      <!-- Ugeskifter Kontroller -->
+    <!-- Week Switcher Controls -->
+    <div class="flex items-center space-x-3 bg-slate-50 p-1.5 rounded-2xl border border-slate-200/80 shadow-sm">
+      <button id="prevWeekBtn" aria-label="Forrige uge" class="p-2 rounded-xl bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 active:scale-95 transition-all duration-150 shadow-sm border border-slate-200/60 flex items-center justify-center">
+        <i data-lucide="chevron-left" class="w-5 h-5"></i>
+      </button>
+      
+      <div class="px-4 text-center min-w-[120px]">
+        <span id="weekLabel" class="text-base font-bold text-slate-900 tracking-wide block">Uge 44</span>
+        <span id="yearLabel" class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">Oktober 2026</span>
       </div>
-    </header>
 
-    <!-- Today Banner Subheading -->
-    <div class="mb-6 flex items-center justify-between">
-      <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400">Weekly Menu Plan</h2>
-      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100/60 text-emerald-800 border border-emerald-200/60">
-        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-        Today: Monday
-      </span>
+      <button id="nextWeekBtn" aria-label="Næste uge" class="p-2 rounded-xl bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 active:scale-95 transition-all duration-150 shadow-sm border border-slate-200/60 flex items-center justify-center">
+        <i data-lucide="chevron-right" class="w-5 h-5"></i>
+      </button>
+    </div>
+  </header>
+
+    <!-- Status Banner & Forklaring -->
+    <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+      <div class="flex items-center space-x-2">
+        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400">Ugentlig Menu</h2>
+        <span id="currentWeekBadge" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100/80 text-emerald-800 border border-emerald-200/80 hidden">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          Indeværende uge
+        </span>
+      </div>
+
+      <!-- Signaturforklaring for statusser -->
+      <div class="flex items-center space-x-3 text-[11px] text-slate-500">
+        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-slate-900 border border-slate-900"></span> Spiser med</span>
+        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span> Måske</span>
+        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-slate-200 text-slate-400 text-center text-[8px] leading-none flex items-center justify-center font-bold">✕</span> Spiser ikke</span>
+      </div>
     </div>
 
-    <!-- Stacked Days List -->
+    <!-- Dagsliste (Mandag - Søndag) -->
     <main id="mealsContainer" class="flex flex-col space-y-4">
-      <!-- Meals will be populated dynamically via JavaScript -->
+      <!-- Retterne genereres dynamisk via JS -->
     </main>
 
     <!-- Footer Stats / Info -->
     <footer class="mt-12 pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 gap-4">
-      <p>© 2026 Meal Planner App. All meals scheduled.</p>
+      <p>© 2026 Fælles Madplan App. Alle måltider skemalagt.</p>
       <div class="flex items-center space-x-4">
-        <span class="flex items-center gap-1.5"><i data-lucide="user" class="w-3.5 h-3.5"></i> Chef Assigned</span>
-        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-slate-900 inline-block"></span> 6 Participants</span>
+        <span class="flex items-center gap-1.5"><i data-lucide="chef-hat" class="w-3.5 h-3.5"></i> Ansvarlig kok</span>
+        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-slate-900 inline-block"></span> 6 Deltagere (J, M, V, L, Z, G)</span>
       </div>
     </footer>
   </div>
 
   <script>
-    // State management
-    let currentWeek = 43;
-    const year = 2026;
+    // App state
+    const CURRENT_WEEK_NUM = 44; // Indeværende uge
+    let selectedWeek = 44;
 
-    // Participant initials required: J, M, V, L, Z, G
-    const participants = ["J", "M", "V", "L", "Z", "G"];
+    // All participants
+    const participantsList = ["J", "M", "V", "L", "Z", "G"];
 
-    // Sample weekly menus database
+    /**
+     * Uge 42 specifikke deltagelsesregler
+     */
+    const week42Attendance = {
+      "Mandag": { J: { status: "yes" }, Z: { status: "yes" }, G: { status: "yes" }, L: { status: "yes" }, V: { status: "yes" }, M: { status: "no" } },
+      "Tirsdag": { J: { status: "yes" }, Z: { status: "yes" }, G: { status: "yes" }, L: { status: "yes" }, V: { status: "yes" }, M: { status: "yes" } },
+      "Onsdag": { J: { status: "yes" }, Z: { status: "yes" }, G: { status: "yes" }, L: { status: "no" }, V: { status: "maybe" }, M: { status: "no" } },
+      "Torsdag": { J: { status: "yes" }, Z: { status: "yes" }, G: { status: "yes" }, L: { status: "no" }, V: { status: "yes" }, M: { status: "yes" } },
+      "Fredag": { J: { status: "yes" }, Z: { status: "yes" }, G: { status: "yes" }, L: { status: "no" }, V: { status: "yes" }, M: { status: "yes" } },
+      "Lørdag": { J: { status: "yes" }, Z: { status: "yes" }, G: { status: "yes" }, L: { status: "maybe" }, V: { status: "yes" }, M: { status: "yes" } },
+      "Søndag": { J: { status: "yes" }, Z: { status: "yes" }, G: { status: "yes" }, L: { status: "no" }, V: { status: "yes" }, M: { status: "no" } }
+    };
+
+    /**
+     * Uge 43 specifikke deltagelsesregler
+     */
+    const week43Attendance = {
+      "Mandag": { J: { status: "yes" }, Z: { status: "no" }, G: { status: "yes" }, L: { status: "yes" }, V: { status: "yes" }, M: { status: "yes" } },
+      "Tirsdag": { J: { status: "yes" }, Z: { status: "yes" }, G: { status: "yes" }, L: { status: "yes" }, V: { status: "yes" }, M: { status: "yes" } },
+      "Onsdag": { J: { status: "yes" }, Z: { status: "no" }, G: { status: "no" }, L: { status: "no" }, V: { status: "maybe" }, M: { status: "no", note: "Kan ikke lide" } },
+      "Torsdag": { J: { status: "yes" }, Z: { status: "yes" }, G: { status: "yes" }, L: { status: "no" }, V: { status: "yes" }, M: { status: "yes" } },
+      "Fredag": { J: { status: "yes" }, Z: { status: "yes" }, G: { status: "yes" }, L: { status: "no" }, V: { status: "yes" }, M: { status: "yes" } },
+      "Lørdag": { J: { status: "yes" }, Z: { status: "yes" }, G: { status: "yes" }, L: { status: "yes" }, V: { status: "yes" }, M: { status: "no", note: "Træt af burgere" } },
+      "Søndag": { J: { status: "yes" }, Z: { status: "yes" }, G: { status: "yes" }, L: { status: "yes" }, V: { status: "yes" }, M: { status: "yes" } }
+    };
+
+    /**
+     * Uge 44 specifikke deltagelsesregler
+     */
+    const week44Attendance = {
+      "Mandag": { J: { status: "yes" }, Z: { status: "yes" }, G: { status: "yes" }, L: { status: "yes" }, M: { status: "maybe", note: "Overvejer dagen" }, V: { status: "yes" } },
+      "Tirsdag": { J: { status: "yes" }, Z: { status: "yes" }, G: { status: "yes" }, L: { status: "yes" }, M: { status: "maybe", note: "Ser tiden an" }, V: { status: "maybe", note: "Er måske forhindret" } },
+      "Onsdag": { J: { status: "yes" }, Z: { status: "yes" }, G: { status: "yes" }, L: { status: "maybe", note: "Måske med" }, M: { status: "no", note: "Træt af kebab" }, V: { status: "yes" } },
+      "Torsdag": { J: { status: "yes" }, Z: { status: "yes" }, G: { status: "yes" }, L: { status: "no", note: "Spiser ikke med" }, M: { status: "no", note: "Lider ikke ost" }, V: { status: "yes" } },
+      "Fredag": { J: { status: "yes" }, Z: { status: "yes" }, G: { status: "yes" }, L: { status: "yes" }, M: { status: "yes" }, V: { status: "yes" } },
+      "Lørdag": { J: { status: "yes" }, Z: { status: "yes" }, G: { status: "yes" }, L: { status: "no", note: "Spiser ikke med" }, M: { status: "yes" }, V: { status: "yes" } },
+      "Søndag": { J: { status: "yes" }, Z: { status: "yes" }, G: { status: "yes" }, L: { status: "yes" }, M: { status: "yes" }, V: { status: "yes" } }
+    };
+
+    // Standard tilmelding for uge 45 (alle spiser med)
+    function getDefaultAttendance() {
+      const defaultState = {};
+      participantsList.forEach(p => {
+        defaultState[p] = { status: "yes" };
+      });
+      return defaultState;
+    }
+
+    // Madplaner for Uge 42, 43, 44 og 45
     const mealPlans = {
       42: [
-        { day: "Monday", meal: "Slow-Cooked Beef Stew with Root Vegetables", chef: "Lucaz", isToday: false },
-        { day: "Tuesday", meal: "Pan-Seared Salmon with Asparagus & Lemon Butter", chef: "Lucaz", isToday: false },
-        { day: "Wednesday", meal: "Classic Lasagna Bolognese", chef: "Jacob", isToday: false },
-        { day: "Thursday", meal: "Chicken Tikka Masala with Garlic Naan", chef: "Jacob", isToday: false },
-        { day: "Friday", meal: "Smash Burgers with Sweet Potato Fries", chef: "Jacob", isToday: false },
-        { day: "Saturday", meal: "Creamy Mushroom & Truffle Risotto", chef: "Jacob", isToday: false },
-        { day: "Sunday", meal: "Sunday Roast Pork with Applesauce & Gravy", chef: "Jacob", isToday: false }
+        { day: "Mandag", meal: "KyllingeBurger", chef: "Lucaz" },
+        { day: "Tirsdag", meal: "Hele kyllingelår i fad", chef: "Lucaz" },
+        { day: "Onsdag", meal: "Kartoffel Porre Suppe", chef: "Jacob" },
+        { day: "Torsdag", meal: "Brændende Kærlighed", chef: "Jacob" },
+        { day: "Fredag", meal: "Mørbrad Pande", chef: "Jacob" },
+        { day: "Lørdag", meal: "Cæsar Salat", chef: "Jacob" },
+        { day: "Søndag", meal: "Foccacia", chef: "Jacob" }
       ],
       43: [
-        { day: "Monday", meal: "Creamy Tuscan Chicken & Fettuccine Pasta", chef: "Lucaz", isToday: true },
-        { day: "Tuesday", meal: "Homemade Margherita & Prosciutto Pizza", chef: "Lucaz", isToday: false },
-        { day: "Wednesday", meal: "Authentic Mexican Street Tacos with Salsa Verde", chef: "Jacob", isToday: false },
-        { day: "Thursday", meal: "Teriyaki Glazed Salmon Rice Bowl", chef: "Jacob", isToday: false },
-        { day: "Friday", meal: "Thai Green Curry with Jasmine Rice", chef: "Jacob", isToday: false },
-        { day: "Saturday", meal: "Grilled Ribeye Steaks with Herb Butter", chef: "Jacob", isToday: false },
-        { day: "Sunday", meal: "Slow-Roasted Herb Lamb with Potatoes", chef: "Jacob", isToday: false }
+        { day: "Mandag", meal: "Lav Selv Smørrebrød", chef: "Lucaz" },
+        { day: "Tirsdag", meal: "Cremet Spinatpasta Med Kylling Og Kalkunbacon", chef: "Lucaz" },
+        { day: "Onsdag", meal: "Svampe Suppe", chef: "Jacob" },
+        { day: "Torsdag", meal: "Tortillas", chef: "Jacob & Zacharias" },
+        { day: "Fredag", meal: "Rissalat Med BBQ Kyllingeunderlår", chef: "Jacob" },
+        { day: "Lørdag", meal: "KyllingeBurger", chef: "Jacob" },
+        { day: "Søndag", meal: "SkinkePizza", chef: "Jacob" }
       ],
       44: [
-        { day: "Monday", meal: "Lemon Herb Baked Cod with Quinoa Salad", chef: "Lucaz", isToday: false },
-        { day: "Tuesday", meal: "Smoky Pulled Pork Bowls with Slaw", chef: "Lucaz", isToday: false },
-        { day: "Wednesday", meal: "Creamy Butternut Squash Soup & Grilled Cheese", chef: "Jacob", isToday: false },
-        { day: "Thursday", meal: "Crispy Chicken Parmesan with Marinara", chef: "Jacob", isToday: false },
-        { day: "Friday", meal: "Fish Tacos with Mango Salsa", chef: "Jacob", isToday: false },
-        { day: "Saturday", meal: "Greek Souvlaki Platter with Tzatziki", chef: "Jacob", isToday: false },
-        { day: "Sunday", meal: "Traditional Shepherd's Pie", chef: "Jacob", isToday: false }
+        { day: "Mandag", meal: "Pestopasta med kyllingeschnitzel", chef: "Lucaz" },
+        { day: "Tirsdag", meal: "Chicken Diane", chef: "Lucaz" },
+        { day: "Onsdag", meal: "Pita Kebab", chef: "Jacob" },
+        { day: "Torsdag", meal: "Pasta Bolognese", chef: "Jacob" },
+        { day: "Fredag", meal: "SkinkeSchnitzel", chef: "Jacob" },
+        { day: "Lørdag", meal: "ClubSandwich", chef: "Jacob" },
+        { day: "Søndag", meal: "Kyllinge Bagels", chef: "Jacob" }
+      ],
+      45: [
+        { day: "Mandag", meal: "Chefs choice", chef: "Lucaz" },
+        { day: "Tirsdag", meal: "Chefs choice", chef: "Lucaz" },
+        { day: "Onsdag", meal: "Ciabatta", chef: "Jacob" },
+        { day: "Torsdag", meal: "Risengrød", chef: "Marlene" },
+        { day: "Fredag", meal: "Butter Chicken", chef: "Jacob" },
+        { day: "Lørdag", meal: "Tomatsuppe", chef: "Jacob" },
+        { day: "Søndag", meal: "Peperoni pizza", chef: "Jacob" }
       ]
     };
 
-    // Default meals for weeks without explicit data
-    function getGenericWeekData(weekNum) {
-      return [
-        { day: "Monday", meal: `Chef's Choice Special (Week ${weekNum})`, chef: "Lucaz", isToday: false },
-        { day: "Tuesday", meal: "Gourmet Pasta Bake & Garlic Bread", chef: "Lucaz", isToday: false },
-        { day: "Wednesday", meal: "Fresh Garden Stir-fry with Tofu/Chicken", chef: "Jacob", isToday: false },
-        { day: "Thursday", meal: "Mediterranean Chicken & Orzo Bowl", chef: "Jacob", isToday: false },
-        { day: "Friday", meal: "Artisanal Flatbreads & Dips", chef: "Jacob", isToday: false },
-        { day: "Saturday", meal: "Weekend BBQ & Grilled Skewers", chef: "Jacob", isToday: false },
-        { day: "Sunday", meal: "Comforting Vegetable Stew & Crusty Bread", chef: "Jacob", isToday: false }
-      ];
+    // Hent deltagelse for en given uge og dag
+    function getDayAttendance(weekNum, dayName) {
+      if (weekNum === 42) {
+        return week42Attendance[dayName] || getDefaultAttendance();
+      }
+      if (weekNum === 43) {
+        return week43Attendance[dayName] || getDefaultAttendance();
+      }
+      if (weekNum === 44) {
+        return week44Attendance[dayName] || getDefaultAttendance();
+      }
+      return getDefaultAttendance();
     }
 
-    // Render Function
+    // Render funktion
     function renderWeek(weekNum) {
-      document.getElementById("weekLabel").textContent = `Week ${weekNum}`;
+      document.getElementById("weekLabel").textContent = `Uge ${weekNum}`;
       
       const mealsContainer = document.getElementById("mealsContainer");
       mealsContainer.innerHTML = "";
 
-      const currentPlan = mealPlans[weekNum] || getGenericWeekData(weekNum);
+      const currentPlan = mealPlans[weekNum] || mealPlans[44];
 
       currentPlan.forEach((item) => {
-        // Build card HTML
-        const card = document.createElement("div");
+        // KUN grøn fremhævelse hvis det er Mandag OG indeværende uge (Uge 44)
+        const isCurrentWeekMonday = (weekNum === CURRENT_WEEK_NUM && item.day === "Mandag");
         
-        // Highlight logic for Monday (green outline + pale lime inside)
-        const isHighlight = item.day === "Monday";
-        
-        const cardClasses = isHighlight
-          ? "border-2 border-emerald-500 bg-[#f4fbf4] shadow-md shadow-emerald-500/5"
-          : "border border-slate-200/90 bg-slate-50/50 hover:bg-slate-50 shadow-sm";
+        const cardClasses = isCurrentWeekMonday
+          ? "border-2 border-emerald-500 bg-[#f7fee7] shadow-md shadow-emerald-500/10"
+          : "border border-slate-200/90 bg-slate-50/40 hover:bg-slate-50 shadow-sm";
 
+        const card = document.createElement("div");
         card.className = `p-5 sm:p-6 rounded-2xl transition-all duration-200 flex flex-col justify-between ${cardClasses}`;
 
-        // Participants Avatars HTML
-        const participantsHTML = participants.map(initial => `
-          <div class="w-7 h-7 rounded-full bg-slate-900 flex items-center justify-center shadow-sm hover:scale-110 transition-transform cursor-default">
-            <span class="text-xs font-bold text-white leading-none">${initial}</span>
-          </div>
-        `).join("");
+        const dayAttendance = getDayAttendance(weekNum, item.day);
+
+        // Generer avatar cirkler med status & tooltips
+        const participantsHTML = participantsList.map(initial => {
+          const info = dayAttendance[initial] || { status: "yes" };
+          const status = info.status;
+          const note = info.note ? ` (${info.note})` : "";
+
+          let circleStyle = "";
+          let tooltipText = "";
+
+          if (status === "yes") {
+            circleStyle = "bg-slate-900 text-white border border-slate-900";
+            tooltipText = `${initial}: Spiser med${note}`;
+          } else if (status === "maybe") {
+            circleStyle = "bg-amber-400 text-slate-900 font-extrabold border-2 border-amber-500 ring-2 ring-amber-100";
+            tooltipText = `${initial}: Måske${note}`;
+          } else { // 'no'
+            circleStyle = "bg-slate-200 text-slate-400 line-through border border-slate-300 opacity-60";
+            tooltipText = `${initial}: Spiser ikke med${note}`;
+          }
+
+          return `
+            <div class="tooltip-trigger relative inline-block" tabindex="0">
+              <div class="w-7 h-7 rounded-full ${circleStyle} flex items-center justify-center shadow-sm transition-transform cursor-pointer hover:scale-110">
+                <span class="text-xs font-bold leading-none">${initial}</span>
+              </div>
+              <div class="tooltip-content absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1 bg-slate-900 text-white text-[11px] font-medium rounded-lg whitespace-nowrap shadow-xl z-20 pointer-events-none">
+                ${tooltipText}
+                <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900"></div>
+              </div>
+            </div>
+          `;
+        }).join("");
 
         card.innerHTML = `
-          <!-- Top Row: Day Name & Tag -->
+          <!-- Top Row: Dag og status badge -->
           <div class="flex items-center justify-between mb-2">
             <div class="flex items-center space-x-2">
-              <span class="text-xs font-extrabold uppercase tracking-wider ${isHighlight ? 'text-emerald-800' : 'text-slate-400'}">
+              <span class="text-xs font-extrabold uppercase tracking-wider ${isCurrentWeekMonday ? 'text-emerald-800' : 'text-slate-400'}">
                 ${item.day}
               </span>
-              ${isHighlight ? `
-                <span class="px-2 py-0.5 text-[10px] font-bold bg-emerald-600 text-white rounded-md tracking-wide">
-                  CURRENT DAY
+              ${isCurrentWeekMonday ? `
+                <span class="px-2 py-0.5 text-[10px] font-bold bg-emerald-600 text-white rounded-md tracking-wide flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                  I DAG
                 </span>
               ` : ''}
             </div>
-            <i data-lucide="utensils-crossed" class="w-4 h-4 ${isHighlight ? 'text-emerald-500' : 'text-slate-300'}"></i>
+            <i data-lucide="utensils-crossed" class="w-4 h-4 ${isCurrentWeekMonday ? 'text-emerald-600' : 'text-slate-300'}"></i>
           </div>
 
-          <!-- Middle Row: Meal Title -->
+          <!-- Middle Row: Ret overskrift -->
           <div class="mb-5">
-            <h3 class="text-lg sm:text-xl font-bold ${isHighlight ? 'text-slate-900' : 'text-slate-800'} tracking-tight leading-snug">
+            <h3 class="text-lg sm:text-xl font-bold ${isCurrentWeekMonday ? 'text-slate-900' : 'text-slate-800'} tracking-tight leading-snug">
               ${item.meal}
             </h3>
           </div>
 
-          <!-- Bottom Row: Chef Info & Participants -->
-          <div class="flex items-center justify-between pt-3 border-t ${isHighlight ? 'border-emerald-200/60' : 'border-slate-200/60'}">
+          <!-- Bottom Row: Kok og Deltagere -->
+          <div class="flex items-center justify-between pt-3 border-t ${isCurrentWeekMonday ? 'border-emerald-200/80' : 'border-slate-200/60'}">
             
-            <!-- Left: Chef Name -->
+            <!-- Venstre: Kok -->
             <div class="flex items-center space-x-2">
-              <div class="w-6 h-6 rounded-full ${isHighlight ? 'bg-emerald-200 text-emerald-800' : 'bg-slate-200 text-slate-700'} flex items-center justify-center">
+              <div class="w-6.5 h-6.5 rounded-full ${isCurrentWeekMonday ? 'bg-emerald-200 text-emerald-900' : 'bg-slate-200 text-slate-700'} flex items-center justify-center">
                 <i data-lucide="chef-hat" class="w-3.5 h-3.5"></i>
               </div>
               <div class="text-xs">
-                <span class="text-slate-400 font-medium">Chef: </span>
+                <span class="text-slate-400 font-medium">Kok: </span>
                 <span class="font-bold text-slate-900">${item.chef}</span>
               </div>
             </div>
 
-            <!-- Right: Initials Badges -->
-            <div class="flex items-center -space-x-1.5 overflow-hidden">
+            <!-- Højre: Deltagere -->
+            <div class="flex items-center space-x-1 sm:space-x-1.5">
               ${participantsHTML}
             </div>
           </div>
@@ -205,24 +311,28 @@
         mealsContainer.appendChild(card);
       });
 
-      // Re-initialize Lucide icons for dynamically added content
+      // Genindlæs Lucide ikoner
       lucide.createIcons();
     }
 
-    // Event Listeners for Switcher
+    // Navigation Knapper
     document.getElementById("prevWeekBtn").addEventListener("click", () => {
-      currentWeek--;
-      renderWeek(currentWeek);
+      if (selectedWeek > 42) {
+        selectedWeek--;
+        renderWeek(selectedWeek);
+      }
     });
 
     document.getElementById("nextWeekBtn").addEventListener("click", () => {
-      currentWeek++;
-      renderWeek(currentWeek);
+      if (selectedWeek < 45) {
+        selectedWeek++;
+        renderWeek(selectedWeek);
+      }
     });
 
-    // Initial Render
+    // Initialisering ved indlæsning
     window.onload = function() {
-      renderWeek(currentWeek);
+      renderWeek(selectedWeek);
     };
   </script>
 </body>
