@@ -1,50 +1,144 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+<meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>.dots v0.3.1-beta</title>
+    <title>.dots v0.4.0-beta</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #ffffff;
+        }
+    </style>
 </head>
-<body>
-    <h1>.dots</h1>
+<body class="bg-white min-h-screen text-slate-800 antialiased selection:bg-emerald-100 selection:text-emerald-900">
 
-    <!-- Task Creation Form -->
-    <form id="add-task-form" style="margin-bottom: 20px;">
-        <input type="text" id="task-title-input" placeholder="Enter new task title..." required style="width: 300px; padding: 5px;">
-        <button type="submit" style="padding: 5px 10px;">Add Task</button>
-    </form>
-
-    <hr>
-
-    <!-- Side-by-Side Table Layout -->
-    <div style="display: flex; gap: 40px; align-items: flex-start;">
-        <div style="flex: 1;">
-            <h2>Pending Tasks (TODO)</h2>
-            <table border="1" cellpadding="8" cellspacing="0" style="width: 100%;">
-                <thead>
-                    <tr>
-                        <th>Task</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody id="todo-table-body"></tbody>
-            </table>
+    <!-- Global Navigation Switcher -->
+    <nav class="border-b border-slate-100 bg-white sticky top-0 z-50">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <span class="text-xl font-extrabold tracking-tight text-slate-900">.dots</span>
+                <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">v0.4.0</span>
+            </div>
+            <div class="flex items-center space-x-2 bg-slate-100 p-1 rounded-xl">
+                <button id="navTasksBtn" onclick="switchView('tasks')" class="px-4 py-1.5 text-xs font-bold rounded-lg bg-white text-slate-900 shadow-sm transition-all">
+                    Tasks
+                </button>
+                <button id="navCrumbsBtn" onclick="switchView('crumbs')" class="px-4 py-1.5 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-900 transition-all">
+                    Crumbs  crumbs
+                </button>
+            </div>
         </div>
+    </nav>
 
-        <div style="flex: 1;">
-            <h2>Completed Tasks (DONE)</h2>
-            <table border="1" cellpadding="8" cellspacing="0" style="width: 100%;">
-                <thead>
-                    <tr>
-                        <th>Task</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody id="done-table-body"></tbody>
-            </table>
-        </div>
+    <!-- Main Container -->
+    <div class="max-w-3xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        
+        <!-- TASKS VIEW -->
+        <section id="tasks-view" class="space-y-6">
+            <h1 class="text-2xl font-bold tracking-tight text-slate-900">Task Manager</h1>
+
+            <!-- Task Creation Form -->
+            <form id="add-task-form" class="flex gap-2">
+                <input type="text" id="task-title-input" placeholder="Enter new task title..." required class="flex-1 px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
+                <button type="submit" class="px-5 py-2 bg-slate-900 text-white font-semibold rounded-xl hover:bg-slate-800 text-sm transition-all">Add Task</button>
+            </form>
+
+            <hr class="border-slate-100 my-6">
+
+            <!-- Side-by-Side Table Layout -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-slate-50/50 border border-slate-200/80 p-5 rounded-2xl">
+                    <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4">Pending Tasks (TODO)</h2>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <tbody id="todo-table-body" class="divide-y divide-slate-200/60"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="bg-slate-50/50 border border-slate-200/80 p-5 rounded-2xl">
+                    <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4">Completed Tasks (DONE)</h2>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <tbody id="done-table-body" class="divide-y divide-slate-200/60"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CRUMBS VIEW (Meal Planner) -->
+        <section id="crumbs-view" class="hidden space-y-6">
+            <!-- Top Header -->
+            <header class="flex flex-col sm:flex-row items-center justify-between pb-6 mb-8 border-b border-slate-100 gap-4">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl">
+                        <i data-lucide="utensils" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold tracking-tight text-slate-900">Weekly Table</h1>
+                        <p class="text-xs font-medium text-slate-500">Shared family & group meal schedule</p>
+                    </div>
+                </div>
+
+                <!-- Week Switcher Controls -->
+                <div class="flex items-center space-x-3 bg-slate-50 p-1.5 rounded-2xl border border-slate-200/80 shadow-sm">
+                    <button id="prevWeekBtn" class="p-2 rounded-xl bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100 active:scale-95 transition-all shadow-sm border border-slate-200/60 flex items-center justify-center">
+                        <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                    </button>
+                    <div class="px-4 text-center min-w-[110px]">
+                        <span id="weekLabel" class="text-base font-bold text-slate-900 tracking-wide block">Week 43</span>
+                        <span id="yearLabel" class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">2026</span>
+                    </div>
+                    <button id="nextWeekBtn" class="p-2 rounded-xl bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100 active:scale-95 transition-all shadow-sm border border-slate-200/60 flex items-center justify-center">
+                        <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Stacked Days List Container -->
+            <main id="mealsContainer" class="flex flex-col space-y-4"></main>
+        </section>
     </div>
 
+    <!-- View Switcher Script -->
+    <script>
+        function switchView(view) {
+            const tasksView = document.getElementById('tasks-view');
+            const crumbsView = document.getElementById('crumbs-view');
+            const navTasksBtn = document.getElementById('navTasksBtn');
+            const navCrumbsBtn = document.getElementById('navCrumbsBtn');
+
+            if (view === 'tasks') {
+                tasksView.classList.remove('hidden');
+                crumbsView.classList.add('hidden');
+                navTasksBtn.className = "px-4 py-1.5 text-xs font-bold rounded-lg bg-white text-slate-900 shadow-sm transition-all";
+                navCrumbsBtn.className = "px-4 py-1.5 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-900 transition-all";
+            } else {
+                tasksView.classList.add('hidden');
+                crumbsView.classList.remove('hidden');
+                navCrumbsBtn.className = "px-4 py-1.5 text-xs font-bold rounded-lg bg-white text-slate-900 shadow-sm transition-all";
+                navTasksBtn.className = "px-4 py-1.5 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-900 transition-all";
+                
+                // Initialize Lucide icons when rendering crumbs view
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+            }
+        }
+    </script>
+
+    <!-- Existing Application Scripts -->
     <script type="module" src="app.js"></script>
+    <script type="module" src="crumbs.js"></script>
 </body>
 </html>
