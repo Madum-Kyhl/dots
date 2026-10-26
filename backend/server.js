@@ -1,33 +1,10 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const sqlite3 = require('sqlite3').verbose();
+const db = require('./database');
 
 const PORT = 8080;
 const PUBLIC_DIR = path.join(process.cwd(), 'frontend');
-const DATA_DIR = path.join(process.cwd(), 'data');
-
-// Ensure data directory exists
-if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-}
-
-// Initialize SQLite Database Connection
-const dbPath = path.join(DATA_DIR, 'dots.db');
-const db = new sqlite3.Database(dbPath, (err) => {
-    if (err) console.error('Database connection error:', err);
-    else console.log('Connected to SQLite database at', dbPath);
-});
-
-// Ensure table exists on boot
-db.run(`
-    CREATE TABLE IF NOT EXISTS tasks (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        status TEXT NOT NULL DEFAULT 'TODO',
-        title TEXT NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-`);
 
 http.createServer((req, res) => {
     const parsedUrl = new URL(req.url, `http://${req.headers.host}`);
@@ -101,7 +78,31 @@ http.createServer((req, res) => {
         return;
     }
 
-    // Serve static frontend files with correct MIME types (Preserving your exact logic)
+    // API: Get crumbs (meals) for a specific week
+    if (pathname === '/api/crumbs' && req.method === 'GET') {
+        const weekNum = parsedUrl.searchParams.get('week') || '44';
+        
+        const query = `
+            SELECT c.id, c.day_name, c.meal_title, c.date, u.name as chef_name
+            FROM crumbs c
+            LEFT JOIN users u ON c.chef_id = u.id
+            WHERE c.week_number = ?
+            ORDER BY c.id ASC
+        `;
+
+        db.all(query, [weekNum], (err, rows) => {
+            if (err) {
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: err.message }));
+                return;
+            }
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(rows));
+        });
+        return;
+    }
+
+    // Serve static frontend files with correct MIME types
     let filePath = path.join(PUBLIC_DIR, req.url === '/' || req.url.startsWith('/?') ? 'index.html' : req.url.split('?')[0]);
     
     const extname = path.extname(filePath);
