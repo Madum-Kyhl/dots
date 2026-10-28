@@ -100,7 +100,7 @@ function renderCrumbs(mealPlanData, weekNum) {
             let innerText = initial;
 
             if (status === "yes") {
-                circleStyle = "bg-slate-900 text-white border border-slate-900";
+                circleStyle = "bg-emerald-600 text-white border border-emerald-600";
                 tooltipText = `${initial}: Spiser med${note}`;
             } else if (status === "maybe") {
                 circleStyle = "bg-amber-400 text-slate-900 font-extrabold border-2 border-amber-500 ring-2 ring-amber-100";

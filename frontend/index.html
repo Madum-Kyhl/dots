@@ -119,6 +119,19 @@
                 </div>
             </header>
 
+            <!-- Legend Bar (Added directly underneath the week selector section) -->
+            <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1">
+                <div class="flex items-center space-x-2">
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400">Ugentlig Menu</h2>
+                </div>
+                <div class="flex items-center space-x-3 text-[11px] text-slate-500">
+                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-600"></span> Spiser</span>
+                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span> Måske</span>
+                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-rose-100 border border-rose-300"></span> Afbud</span>
+                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-slate-50 border border-dashed border-slate-300"></span> Ubesvaret</span>
+                </div>
+            </div>
+
             <!-- Stacked Days List Container -->
             <main id="mealsContainer" class="flex flex-col space-y-4"></main>
         </section>
