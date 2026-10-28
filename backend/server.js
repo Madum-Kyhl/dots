@@ -7,6 +7,9 @@ const PORT = 8080;
 const PUBLIC_DIR = path.join(process.cwd(), 'frontend');
 
 http.createServer((req, res) => {
+    // Log all incoming requests to Docker console
+    console.log(`[HTTP] ${req.method} ${req.url}`);
+    
     const parsedUrl = new URL(req.url, `http://${req.headers.host}`);
     const pathname = parsedUrl.pathname;
 
