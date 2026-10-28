@@ -86,7 +86,7 @@ http.createServer((req, res) => {
         const weekNum = parsedUrl.searchParams.get('week') || '44';
         
         const query = `
-            SELECT c.id, c.day_name, c.meal_title, c.date, u.name as chef_name
+            SELECT c.id, c.day_name, c.meal_title, c.date, c.chef_id, u.name as chef_name
             FROM crumbs c
             LEFT JOIN users u ON c.chef_id = u.id
             WHERE c.week_number = ?
@@ -223,6 +223,59 @@ http.createServer((req, res) => {
                     }
                     res.writeHead(200, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({ success: true, meal_title: mealTitle }));
+                });
+            } catch (err) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Invalid JSON' }));
+            }
+        });
+        return;
+    }
+
+    // API: Get all users for chef selection dropdown
+    if (pathname === '/api/users' && req.method === 'GET') {
+        db.all("SELECT id, name, initials FROM users ORDER BY id ASC", [], (err, rows) => {
+            if (err) {
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: err.message }));
+                return;
+            }
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(rows));
+        });
+        return;
+    }
+
+    // API: Update or clear chef for a crumb/meal
+    if (pathname === '/api/crumbs/chef' && req.method === 'POST') {
+        let body = '';
+        req.on('data', chunk => body += chunk);
+        req.on('end', () => {
+            try {
+                const { date, weekNumber, year, dayName, chefId } = JSON.parse(body);
+                if (!date || !weekNumber || !dayName) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: 'Missing required fields' }));
+                    return;
+                }
+                const currentYear = year || new Date().getFullYear();
+                const parsedChefId = (chefId === undefined || chefId === null || chefId === "null") ? null : chefId;
+
+                const upsertQuery = `
+                    INSERT INTO crumbs (date, week_number, year, day_name, meal_title, chef_id)
+                    VALUES (?, ?, ?, ?, COALESCE((SELECT meal_title FROM crumbs WHERE date = ?), 'Ikke planlagt endnu...'), ?)
+                    ON CONFLICT(date) 
+                    DO UPDATE SET chef_id = excluded.chef_id
+                `;
+
+                db.run(upsertQuery, [date, weekNumber, currentYear, dayName, date, parsedChefId], function(err) {
+                    if (err) {
+                        res.writeHead(500, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({ error: err.message }));
+                        return;
+                    }
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ success: true, chef_id: parsedChefId }));
                 });
             } catch (err) {
                 res.writeHead(400, { 'Content-Type': 'application/json' });

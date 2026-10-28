@@ -21,12 +21,14 @@ function getDateForWeekDay(week, year, dayIndex) {
 }
 
 let selectedWeek = getCurrentWeekNumber(new Date());
+let usersList = [];
 const participantsList = ["G", "J", "L", "M", "V", "Z"];
 const standardDays = ["Mandag", "Tirsdag", "Onsdag", "Torsdag", "Fredag", "Lørdag", "Søndag"];
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
     if (!document.getElementById("mealsContainer")) return;
 
+    await fetchUsers();
     loadWeek(selectedWeek);
 
     document.getElementById("prevWeekBtn").addEventListener("click", () => {
@@ -39,6 +41,17 @@ document.addEventListener("DOMContentLoaded", () => {
         loadWeek(selectedWeek);
     });
 });
+
+async function fetchUsers() {
+    try {
+        const response = await fetch('/api/users');
+        if (response.ok) {
+            usersList = await response.json();
+        }
+    } catch (err) {
+        console.error("Failed to load users list:", err);
+    }
+}
 
 async function loadWeek(weekNum) {
     document.getElementById("weekLabel").textContent = `Uge ${weekNum}`;
@@ -75,17 +88,20 @@ function renderCrumbs(mealPlanData, weekNum) {
     // Always iterate through all 7 days to ensure the week appears complete
     standardDays.forEach((dayName, index) => {
         const item = planMap[dayName];
-        const isMissing = !item || !item.meal_title; // Tjek om dagen mangler data
+        const isMissing = !item || !item.meal_title || item.meal_title === "Ikke planlagt endnu...";
         const dayDate = (item && item.date) ? item.date : getDateForWeekDay(weekNum, currentYear, index);
 
         const isToday = (dayDate === todayString);
-        
+        const hasNoChef = !isMissing && (!item || !item.chef_id);
+
         // Select classes: Dashed and muted if missing, otherwise normal/highlighted
         let cardClasses = "";
         if (isToday) {
             cardClasses = "border-2 border-emerald-500 bg-[#f4fbf4] shadow-md shadow-emerald-500/10";
         } else if (isMissing) {
             cardClasses = "border-2 border-dashed border-slate-200 bg-slate-50/20 opacity-75 shadow-none";
+        } else if (hasNoChef) {
+            cardClasses = "border-2 border-rose-300 bg-rose-50/80 shadow-sm";
         } else {
             cardClasses = "border-2 border-slate-200/90 bg-slate-50/40 hover:bg-slate-50 shadow-sm";
         }
@@ -144,8 +160,8 @@ function renderCrumbs(mealPlanData, weekNum) {
         }).join("");
 
         const mealTitle = isMissing ? "Ikke planlagt endnu..." : item.meal_title;
-        const chefName = isMissing ? "Ikke tildelt" : (item.chef_name || 'Ikke tildelt');
         const crumbId = item ? item.id : 0;
+        const currentChefId = item ? item.chef_id : null;
 
         card.innerHTML = `
             <div class="flex items-center justify-between mb-2">
@@ -162,6 +178,11 @@ function renderCrumbs(mealPlanData, weekNum) {
                     ${isMissing ? `
                         <span class="px-2 py-0.5 text-[10px] font-semibold bg-slate-200 text-slate-500 rounded-md tracking-wide">
                             MANGLER
+                        </span>
+                    ` : ''}
+                    ${hasNoChef ? `
+                        <span class="px-2 py-0.5 text-[10px] font-semibold bg-rose-200 text-rose-800 rounded-md tracking-wide">
+                            MANGLER KOK
                         </span>
                     ` : ''}
                 </div>
@@ -197,14 +218,23 @@ function renderCrumbs(mealPlanData, weekNum) {
                 </div>
             </div>
 
-            <div class="flex items-center justify-between pt-3 border-t ${isToday ? 'border-emerald-200/80' : 'border-slate-200/60'}">
+            <!-- Chef Selector & Clear (X) Button -->
+            <div class="flex items-center justify-between pt-3 border-t ${isToday ? 'border-emerald-200/80' : (hasNoChef ? 'border-rose-200' : 'border-slate-200/60')}">
                 <div class="flex items-center space-x-2">
-                    <div class="w-6 h-6 rounded-full ${isToday ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'} flex items-center justify-center shadow-sm">
+                    <div class="w-6 h-6 rounded-full ${isToday ? 'bg-emerald-100 text-emerald-800' : (hasNoChef ? 'bg-rose-100 text-rose-800' : 'bg-slate-100 text-slate-600')} flex items-center justify-center shadow-sm">
                         <i data-lucide="chef-hat" class="w-3.5 h-3.5"></i>
                     </div>
-                    <div class="text-xs">
-                        <span class="text-slate-400 font-medium">Kok: </span>
-                        <span class="font-bold ${isMissing ? 'text-slate-400' : 'text-slate-900'}">${chefName}</span>
+                    <div class="text-xs flex items-center space-x-1.5">
+                        <span class="text-slate-400 font-medium">Kok:</span>
+                        <select onchange="updateChef(${crumbId}, '${dayDate}', ${weekNum}, '${dayName}', ${currentYear}, this.value)"
+                                class="px-2 py-1 text-xs font-bold text-slate-900 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm cursor-pointer">
+                            <option value="" ${!currentChefId ? 'selected' : ''}>-- Vælg kok --</option>
+                            ${usersList.map(u => `<option value="${u.id}" ${currentChefId === u.id ? 'selected' : ''}>${u.name}</option>`).join('')}
+                        </select>
+                        <button onclick="updateChef(${crumbId}, '${dayDate}', ${weekNum}, '${dayName}', ${currentYear}, null)"
+                                class="p-1 text-slate-400 hover:text-rose-600 bg-white border border-slate-200 rounded-lg shadow-sm transition-colors cursor-pointer" title="Fjern kok (Sæt til ukendt)">
+                            <i data-lucide="x" class="w-3 h-3"></i>
+                        </button>
                     </div>
                 </div>
                 <div class="flex items-center space-x-1 sm:space-x-1.5">
@@ -220,7 +250,33 @@ function renderCrumbs(mealPlanData, weekNum) {
     }
 }
 
-// Inline Edit Handlers attached to window for module scope compatibility
+// Chef Update Handler
+window.updateChef = async function(crumbId, dayDate, weekNum, dayName, year, chefId) {
+    const parsedChefId = (chefId === "" || chefId === null || chefId === "null") ? null : Number(chefId);
+
+    try {
+        const response = await fetch('/api/crumbs/chef', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                crumbId: crumbId || 0,
+                date: dayDate,
+                weekNumber: weekNum,
+                year: year,
+                dayName: dayName,
+                chefId: parsedChefId
+            })
+        });
+
+        if (!response.ok) throw new Error("Failed to update chef");
+
+        loadWeek(weekNum);
+    } catch (err) {
+        console.error("Error updating chef:", err);
+    }
+}
+
+// Inline Edit Handlers
 window.enableEditMode = function(dayName, originalTitle, crumbId, dayDate, weekNum, year) {
     document.getElementById(`title-display-${dayName}`).classList.add('hidden');
     document.getElementById(`title-edit-${dayName}`).classList.remove('hidden');
