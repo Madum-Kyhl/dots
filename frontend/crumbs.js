@@ -113,9 +113,14 @@ function renderCrumbs(mealPlanData, weekNum) {
                 tooltipText = `${initial}: Ubesvaret`;
             }
 
+            // Fallback crumb id if the day has no plan yet (0 or null)
+            const crumbId = item ? item.id : 0;
+
             return `
-                <div class="tooltip-trigger relative inline-block" tabindex="0">
-                    <div class="w-7 h-7 rounded-full ${circleStyle} flex items-center justify-center shadow-sm transition-transform cursor-pointer hover:scale-110">
+                <div class="tooltip-trigger relative inline-block cursor-pointer" tabindex="0" 
+                     onclick="handleBadgeClick(${crumbId}, '${initial}', '${status}', ${weekNum})"
+                     title="Klik for at ændre status">
+                    <div class="w-7 h-7 rounded-full ${circleStyle} flex items-center justify-center shadow-sm transition-transform hover:scale-110">
                         <span class="text-xs font-bold leading-none">${innerText}</span>
                     </div>
                     <div class="tooltip-content absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1 bg-slate-900 text-white text-[11px] font-medium rounded-lg whitespace-nowrap shadow-xl z-20 pointer-events-none">
@@ -174,5 +179,35 @@ function renderCrumbs(mealPlanData, weekNum) {
 
     if (typeof lucide !== 'undefined') {
         lucide.createIcons();
+    }
+}
+
+// 1-Click Cycle Handler for Mobile & Desktop
+window.handleBadgeClick = async function(crumbId, initials, currentStatus, weekNum) {
+    if (!crumbId) {
+        alert("Denne dag har ikke fået tildelt en madplan endnu, så der kan ikke tilmeldes.");
+        return;
+    }
+
+    // Cycle logic: unanswered/no -> yes -> maybe -> no -> yes
+    let nextStatus = "yes";
+    if (currentStatus === "yes") nextStatus = "maybe";
+    else if (currentStatus === "maybe") nextStatus = "no";
+    else if (currentStatus === "no") nextStatus = "yes";
+    else nextStatus = "yes"; // default fallback for 'unanswered'
+
+    try {
+        const response = await fetch(`/api/crumbs/${crumbId}/signup`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ initials, status: nextStatus })
+        });
+
+        if (!response.ok) throw new Error("Failed to update signup");
+
+        // Reload the week view to reflect the updated database state instantly
+        loadWeek(weekNum);
+    } catch (err) {
+        console.error("Error updating status:", err);
     }
 }

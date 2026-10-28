@@ -138,6 +138,58 @@ http.createServer((req, res) => {
         return;
     }
 
+    // API: Toggle or update participant signup status for a crumb
+    if (pathname.startsWith('/api/crumbs/') && pathname.endsWith('/signup') && req.method === 'POST') {
+        const parts = pathname.split('/');
+        const crumbId = parts[3];
+
+        let body = '';
+        req.on('data', chunk => body += chunk);
+        req.on('end', () => {
+            try {
+                const { initials, status } = JSON.parse(body);
+                if (!initials || !status) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: 'Initials and status are required' }));
+                    return;
+                }
+
+                // First find the user_id from initials
+                db.get("SELECT id FROM users WHERE initials = ?", [initials], (err, user) => {
+                    if (err || !user) {
+                        res.writeHead(404, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({ error: 'User not found' }));
+                        return;
+                    }
+
+                    const userId = user.id;
+
+                    // Upsert signup status
+                    const upsertQuery = `
+                        INSERT INTO crumb_signups (crumb_id, user_id, status)
+                        VALUES (?, ?, ?)
+                        ON CONFLICT(crumb_id, user_id) 
+                        DO UPDATE SET status = excluded.status
+                    `;
+
+                    db.run(upsertQuery, [crumbId, userId, status], function(err) {
+                        if (err) {
+                            res.writeHead(500, { 'Content-Type': 'application/json' });
+                            res.end(JSON.stringify({ error: err.message }));
+                            return;
+                        }
+                        res.writeHead(200, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({ success: true, crumb_id: crumbId, initials, status }));
+                    });
+                });
+            } catch (err) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Invalid JSON' }));
+            }
+        });
+        return;
+    }
+
     // Serve static frontend files with correct MIME types
     let filePath = path.join(PUBLIC_DIR, req.url === '/' || req.url.startsWith('/?') ? 'index.html' : req.url.split('?')[0]);
     
