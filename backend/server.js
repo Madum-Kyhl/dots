@@ -193,6 +193,45 @@ http.createServer((req, res) => {
         return;
     }
 
+    // API: Upsert or update meal title for a specific date/crumb
+    if (pathname === '/api/crumbs/update' && req.method === 'POST') {
+        let body = '';
+        req.on('data', chunk => body += chunk);
+        req.on('end', () => {
+            try {
+                const { crumbId, date, weekNumber, year, dayName, mealTitle } = JSON.parse(body);
+                if (!date || !weekNumber || !dayName || mealTitle === undefined) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: 'Missing required fields' }));
+                    return;
+                }
+
+                const currentYear = year || new Date().getFullYear();
+
+                const upsertQuery = `
+                    INSERT INTO crumbs (date, week_number, year, day_name, meal_title)
+                    VALUES (?, ?, ?, ?, ?)
+                    ON CONFLICT(date) 
+                    DO UPDATE SET meal_title = excluded.meal_title
+                `;
+
+                db.run(upsertQuery, [date, weekNumber, currentYear, dayName, mealTitle], function(err) {
+                    if (err) {
+                        res.writeHead(500, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({ error: err.message }));
+                        return;
+                    }
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ success: true, meal_title: mealTitle }));
+                });
+            } catch (err) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Invalid JSON' }));
+            }
+        });
+        return;
+    }
+
     // Serve static frontend files with correct MIME types
     let filePath = path.join(PUBLIC_DIR, req.url === '/' || req.url.startsWith('/?') ? 'index.html' : req.url.split('?')[0]);
     

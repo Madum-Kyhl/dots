@@ -6,8 +6,23 @@ function getCurrentWeekNumber(date) {
     return weekNo;
 }
 
+// Helper to get ISO date string (YYYY-MM-DD) for a specific weekday in a given ISO week
+function getDateForWeekDay(week, year, dayIndex) {
+    const simple = new Date(Date.UTC(year, 0, 1 + (week - 1) * 7));
+    const dow = simple.getUTCDay();
+    const ISOweekStart = new Date(simple);
+    if (dow <= 4) {
+        ISOweekStart.setUTCDate(simple.getUTCDate() - simple.getUTCDay() + 1);
+    } else {
+        ISOweekStart.setUTCDate(simple.getUTCDate() + 8 - simple.getUTCDay());
+    }
+    ISOweekStart.setUTCDate(ISOweekStart.getDate() + dayIndex);
+    return ISOweekStart.toISOString().split('T')[0];
+}
+
 let selectedWeek = getCurrentWeekNumber(new Date());
 const participantsList = ["G", "J", "L", "M", "V", "Z"];
+const standardDays = ["Mandag", "Tirsdag", "Onsdag", "Torsdag", "Fredag", "Lørdag", "Søndag"];
 
 document.addEventListener("DOMContentLoaded", () => {
     if (!document.getElementById("mealsContainer")) return;
@@ -46,13 +61,8 @@ function renderCrumbs(mealPlanData, weekNum) {
     mealsContainer.innerHTML = "";
 
     const todayObj = new Date();
-    const year = todayObj.getFullYear();
-    const month = String(todayObj.getMonth() + 1).padStart(2, '0');
-    const day = String(todayObj.getDate()).padStart(2, '0');
-    const todayString = `${year}-${month}-${day}`;
-
-    // Standard list of weekdays in Danish if the database is missing days
-    const standardDays = ["Mandag", "Tirsdag", "Onsdag", "Torsdag", "Fredag", "Lørdag", "Søndag"];
+    const currentYear = todayObj.getFullYear();
+    const todayString = todayObj.toISOString().split('T')[0];
 
     // Create a lookup map of the data received from the backend based on day name or date
     const planMap = {};
@@ -63,11 +73,12 @@ function renderCrumbs(mealPlanData, weekNum) {
     }
 
     // Always iterate through all 7 days to ensure the week appears complete
-    standardDays.forEach((dayName) => {
+    standardDays.forEach((dayName, index) => {
         const item = planMap[dayName];
         const isMissing = !item || !item.meal_title; // Tjek om dagen mangler data
+        const dayDate = (item && item.date) ? item.date : getDateForWeekDay(weekNum, currentYear, index);
 
-        const isToday = item && (item.date === todayString);
+        const isToday = (dayDate === todayString);
         
         // Select classes: Dashed and muted if missing, otherwise normal/highlighted
         let cardClasses = "";
@@ -80,6 +91,7 @@ function renderCrumbs(mealPlanData, weekNum) {
         }
 
         const card = document.createElement("div");
+        card.id = `card-${dayName}`;
         card.className = `p-5 sm:p-6 rounded-2xl transition-all duration-200 flex flex-col justify-between min-h-[170px] ${cardClasses}`;
 
         // Map signups if available from backend, otherwise default everyone to 'unanswered'
@@ -133,6 +145,7 @@ function renderCrumbs(mealPlanData, weekNum) {
 
         const mealTitle = isMissing ? "Ikke planlagt endnu..." : item.meal_title;
         const chefName = isMissing ? "Ikke tildelt" : (item.chef_name || 'Ikke tildelt');
+        const crumbId = item ? item.id : 0;
 
         card.innerHTML = `
             <div class="flex items-center justify-between mb-2">
@@ -154,11 +167,36 @@ function renderCrumbs(mealPlanData, weekNum) {
                 </div>
                 <i data-lucide="utensils-crossed" class="w-4 h-4 ${isToday ? 'text-emerald-600' : 'text-slate-300'}"></i>
             </div>
-            <div class="mb-5">
-                <h3 class="text-lg sm:text-xl font-bold ${isMissing ? 'text-slate-400 italic font-medium' : (isToday ? 'text-slate-900' : 'text-slate-800')} tracking-tight leading-snug">
-                    ${mealTitle}
-                </h3>
+            
+            <!-- Meal Title & Edit Trigger -->
+            <div class="mb-5 flex items-center justify-between group">
+                <div id="title-display-${dayName}" class="flex items-center space-x-2 flex-1">
+                    <h3 class="text-lg sm:text-xl font-bold ${isMissing ? 'text-slate-400 italic font-medium' : (isToday ? 'text-slate-900' : 'text-slate-800')} tracking-tight leading-snug">
+                        ${mealTitle}
+                    </h3>
+                    <button onclick="enableEditMode('${dayName}', \`${mealTitle}\`, ${crumbId}, '${dayDate}', ${weekNum}, ${currentYear})" 
+                            class="p-1 text-slate-400 hover:text-emerald-600 transition-colors" title="Rediger ret">
+                        <i data-lucide="pencil" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <!-- Inline Edit Container (Hidden by default) -->
+                <div id="title-edit-${dayName}" class="hidden flex-1 items-center gap-2">
+                    <input type="text" id="input-${dayName}" value="${isMissing ? '' : mealTitle}" 
+                           oninput="checkMealInputChanges('${dayName}', \`${isMissing ? '' : mealTitle}\`)"
+                           class="flex-1 px-3 py-1.5 text-sm font-semibold text-slate-900 bg-white border border-emerald-500 rounded-xl focus:outline-none ring-2 ring-emerald-100 shadow-inner">
+                    <button id="save-btn-${dayName}" disabled 
+                            onclick="saveMealTitle(${crumbId}, '${dayDate}', ${weekNum}, '${dayName}', ${currentYear})"
+                            class="p-1.5 bg-emerald-600 text-white rounded-lg opacity-50 cursor-not-allowed transition-all shadow-sm hover:bg-emerald-700" title="Gem">
+                        <i data-lucide="check" class="w-4 h-4"></i>
+                    </button>
+                    <button onclick="cancelEditMode('${dayName}', \`${mealTitle}\`, ${isMissing})" 
+                            class="p-1.5 bg-rose-100 text-rose-700 rounded-lg transition-all shadow-sm hover:bg-rose-200" title="Annuller">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
             </div>
+
             <div class="flex items-center justify-between pt-3 border-t ${isToday ? 'border-emerald-200/80' : 'border-slate-200/60'}">
                 <div class="flex items-center space-x-2">
                     <div class="w-6 h-6 rounded-full ${isToday ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'} flex items-center justify-center shadow-sm">
@@ -179,6 +217,66 @@ function renderCrumbs(mealPlanData, weekNum) {
 
     if (typeof lucide !== 'undefined') {
         lucide.createIcons();
+    }
+}
+
+// Inline Edit Handlers attached to window for module scope compatibility
+window.enableEditMode = function(dayName, originalTitle, crumbId, dayDate, weekNum, year) {
+    document.getElementById(`title-display-${dayName}`).classList.add('hidden');
+    document.getElementById(`title-edit-${dayName}`).classList.remove('hidden');
+    
+    const inputField = document.getElementById(`input-${dayName}`);
+    if (originalTitle === "Ikke planlagt endnu...") {
+        inputField.value = "";
+    } else {
+        inputField.value = originalTitle;
+    }
+    inputField.focus();
+    inputField.setSelectionRange(inputField.value.length, inputField.value.length);
+}
+
+window.cancelEditMode = function(dayName, originalTitle, isMissing) {
+    document.getElementById(`title-edit-${dayName}`).classList.add('hidden');
+    document.getElementById(`title-display-${dayName}`).classList.remove('hidden');
+}
+
+window.checkMealInputChanges = function(dayName, originalTitle) {
+    const inputVal = document.getElementById(`input-${dayName}`).value.trim();
+    const saveBtn = document.getElementById(`save-btn-${dayName}`);
+    const cleanOriginal = originalTitle === "Ikke planlagt endnu..." ? "" : originalTitle;
+
+    if (inputVal !== cleanOriginal && inputVal.length > 0) {
+        saveBtn.disabled = false;
+        saveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+    } else {
+        saveBtn.disabled = true;
+        saveBtn.classList.add('opacity-50', 'cursor-not-allowed');
+    }
+}
+
+window.saveMealTitle = async function(crumbId, dayDate, weekNum, dayName, year) {
+    const inputVal = document.getElementById(`input-${dayName}`).value.trim();
+    if (!inputVal) return;
+
+    try {
+        const response = await fetch('/api/crumbs/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                crumbId: crumbId,
+                date: dayDate,
+                weekNumber: weekNum,
+                year: year,
+                dayName: dayName,
+                mealTitle: inputVal
+            })
+        });
+
+        if (!response.ok) throw new Error("Failed to update meal title");
+
+        loadWeek(weekNum);
+    } catch (err) {
+        console.error("Error saving meal title:", err);
     }
 }
 
