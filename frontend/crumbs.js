@@ -6,6 +6,14 @@ function getCurrentWeekNumber(date) {
     return weekNo;
 }
 
+// Helper to get local date string (YYYY-MM-DD) matching user's local timezone
+function getLocalDateString(date = new Date()) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
 // Helper to get ISO date string (YYYY-MM-DD) for a specific weekday in a given ISO week
 function getDateForWeekDay(week, year, dayIndex) {
     const simple = new Date(Date.UTC(year, 0, 1 + (week - 1) * 7));
@@ -16,7 +24,7 @@ function getDateForWeekDay(week, year, dayIndex) {
     } else {
         ISOweekStart.setUTCDate(simple.getUTCDate() + 8 - simple.getUTCDay());
     }
-    ISOweekStart.setUTCDate(ISOweekStart.getDate() + dayIndex);
+    ISOweekStart.setUTCDate(ISOweekStart.getUTCDate() + dayIndex);
     return ISOweekStart.toISOString().split('T')[0];
 }
 
@@ -119,7 +127,7 @@ function renderCrumbs(mealPlanData, weekNum) {
 
     const todayObj = new Date();
     const currentYear = todayObj.getFullYear();
-    const todayString = todayObj.toISOString().split('T')[0];
+    const todayString = getLocalDateString(todayObj);
 
     // Create a lookup map of the data received from the backend based on day name or date
     currentPlanMap = {};
