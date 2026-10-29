@@ -20,6 +20,7 @@ function getDateForWeekDay(week, year, dayIndex) {
     return ISOweekStart.toISOString().split('T')[0];
 }
 
+let isEditModeActive = false;
 let selectedWeek = getCurrentWeekNumber(new Date());
 let usersList = [];
 let currentPlanMap = {}; // Global store so outside-click listener can access it safely
@@ -83,6 +84,22 @@ async function fetchUsers() {
 async function loadWeek(weekNum) {
     document.getElementById("weekLabel").textContent = `Uge ${weekNum}`;
 
+    // Apply pale green background to body and top navigation when edit mode is active
+    const topNav = document.getElementById('topNav');
+    if (isEditModeActive) {
+        document.body.classList.add('bg-[#eaf5ea]');
+        if (topNav) {
+            topNav.classList.remove('bg-white');
+            topNav.classList.add('bg-[#eaf5ea]');
+        }
+    } else {
+        document.body.classList.remove('bg-[#eaf5ea]');
+        if (topNav) {
+            topNav.classList.remove('bg-[#eaf5ea]');
+            topNav.classList.add('bg-white');
+        }
+    }
+
     try {
         const response = await fetch(`/api/crumbs?week=${weekNum}`);
         if (!response.ok) throw new Error("Failed to fetch crumbs data");
@@ -126,11 +143,11 @@ function renderCrumbs(mealPlanData, weekNum) {
         if (isToday) {
             cardClasses = "border-2 border-emerald-500 bg-[#f4fbf4] shadow-md shadow-emerald-500/10";
         } else if (isMissing) {
-            cardClasses = "border-2 border-dashed border-slate-200 bg-slate-50/20 opacity-75 shadow-none";
+            cardClasses = "border-2 border-dashed border-slate-200 bg-white opacity-75 shadow-none";
         } else if (hasNoChef) {
             cardClasses = "border-2 border-rose-300 bg-rose-50/80 shadow-sm";
         } else {
-            cardClasses = "border-2 border-slate-200/90 bg-slate-50/40 hover:bg-slate-50 shadow-sm";
+            cardClasses = "border-2 border-slate-200/90 bg-white hover:bg-slate-50 shadow-sm";
         }
 
         const card = document.createElement("div");
@@ -172,10 +189,10 @@ function renderCrumbs(mealPlanData, weekNum) {
             const crumbId = item ? item.id : 0;
 
             return `
-                <div class="tooltip-trigger relative inline-block cursor-pointer flex-shrink-0" tabindex="0" 
-                     onclick="handleBadgeClick(${crumbId}, '${initial}', '${status}', ${weekNum})"
+                <div class="tooltip-trigger relative inline-block ${isEditModeActive ? 'cursor-pointer' : 'pointer-events-none'} flex-shrink-0" tabindex="0" 
+                     onclick="handleBadgeClick(${crumbId}, '${initial}', '${status}', ${weekNum}, '${dayDate}', '${dayName}', ${currentYear})"
                      title="Klik for at ændre status">
-                    <div class="w-7 h-7 rounded-full ${circleStyle} flex items-center justify-center shadow-sm transition-transform hover:scale-110">
+                    <div class="w-7 h-7 rounded-full ${circleStyle} flex items-center justify-center shadow-sm transition-transform ${isEditModeActive ? 'hover:scale-110' : ''}">
                         <span class="text-xs font-bold leading-none">${innerText}</span>
                     </div>
                     <div class="tooltip-content absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1 bg-slate-900 text-white text-[11px] font-medium rounded-lg whitespace-nowrap shadow-xl z-20 pointer-events-none">
@@ -220,11 +237,11 @@ function renderCrumbs(mealPlanData, weekNum) {
             
             <!-- Meal Title & Edit Trigger -->
             <div class="mb-5 flex items-center justify-between">
-                <div id="title-display-${dayName}" class="flex items-center space-x-2 flex-1 cursor-pointer group/title" onclick="enableEditMode('${dayName}', \`${mealTitle}\`, ${crumbId}, '${dayDate}', ${weekNum}, ${currentYear})" title="Klik for at redigere ret">
-                    <h3 class="text-lg sm:text-xl font-bold ${isMissing ? 'text-slate-400 italic font-medium' : (isToday ? 'text-slate-900' : 'text-slate-800')} group-hover/title:text-emerald-600 tracking-tight leading-snug transition-colors">
+                <div id="title-display-${dayName}" class="flex items-center space-x-2 flex-1 ${isEditModeActive ? 'cursor-pointer group/title' : 'pointer-events-none'}" onclick="enableEditMode('${dayName}', \`${mealTitle}\`, ${crumbId}, '${dayDate}', ${weekNum}, ${currentYear})" title="Klik for at redigere ret">
+                    <h3 class="text-lg sm:text-xl font-bold ${isMissing ? 'text-slate-400 italic font-medium' : (isToday ? 'text-slate-900' : 'text-slate-800')} ${isEditModeActive ? 'group-hover/title:text-emerald-600' : ''} tracking-tight leading-snug transition-colors">
                         ${mealTitle}
                     </h3>
-                    <button class="p-1 text-slate-400 group-hover/title:text-emerald-600 transition-colors">
+                    <button class="p-1 text-slate-400 ${isEditModeActive ? 'group-hover/title:text-emerald-600 opacity-100 cursor-pointer' : 'opacity-0 pointer-events-none'} transition-colors">
                         <i data-lucide="pencil" class="w-4 h-4"></i>
                     </button>
                 </div>
@@ -246,21 +263,21 @@ function renderCrumbs(mealPlanData, weekNum) {
                 </div>
             </div>
 
-           <!-- Chef Selector & Signups Footer (Unified hover across hat, label, name, and arrow) -->
+           <!-- Chef Selector & Signups Footer -->
             <div class="flex items-center justify-between pt-3 border-t gap-2 flex-wrap ${isToday ? 'border-emerald-200/80' : (hasNoChef ? 'border-rose-200' : 'border-slate-200/60')}">
                 <div class="flex items-center space-x-2">
-                    <div class="text-xs flex items-center space-x-1.5 cursor-pointer group/chef" onclick="toggleChefSelector('${dayName}')" title="Klik for at skifte kok">
-                        <div class="w-6 h-6 rounded-full ${isToday ? 'bg-emerald-100 text-emerald-800' : (hasNoChef ? 'bg-rose-100 text-rose-800' : 'bg-slate-100 text-slate-600')} flex items-center justify-center shadow-sm flex-shrink-0 transition-transform group-hover/chef:scale-110">
+                    <div class="text-xs flex items-center space-x-1.5 ${isEditModeActive ? 'cursor-pointer group/chef' : 'pointer-events-none'}" onclick="toggleChefSelector('${dayName}')" title="Klik for at skifte kok">
+                        <div class="w-6 h-6 rounded-full ${isToday ? 'bg-emerald-100 text-emerald-800' : (hasNoChef ? 'bg-rose-100 text-rose-800' : 'bg-slate-100 text-slate-600')} flex items-center justify-center shadow-sm flex-shrink-0 transition-transform ${isEditModeActive ? 'group-hover/chef:scale-110' : ''}">
                             <i data-lucide="chef-hat" class="w-3.5 h-3.5"></i>
                         </div>
-                        <span class="text-slate-400 font-medium group-hover/chef:text-emerald-600 transition-colors" title="Klik for at skifte kok">Kok:</span>
+                        <span class="text-slate-400 font-medium ${isEditModeActive ? 'group-hover/chef:text-emerald-600' : ''} transition-colors" title="Klik for at skifte kok">Kok:</span>
 
                         <!-- Static Display Name & Dropdown Arrow Icon -->
                         <div id="chef-display-wrap-${dayName}" class="flex items-center space-x-1">
-                            <span id="chef-text-${dayName}" class="font-bold text-slate-900 group-hover/chef:text-emerald-600 transition-colors">
+                            <span id="chef-text-${dayName}" class="font-bold text-slate-900 ${isEditModeActive ? 'group-hover/chef:text-emerald-600' : ''} transition-colors">
                                 ${chefDisplayName}
                             </span>
-                            <button class="p-1 text-slate-400 group-hover/chef:text-emerald-600 transition-colors">
+                            <button class="p-1 text-slate-400 ${isEditModeActive ? 'group-hover/chef:text-emerald-600 opacity-100 cursor-pointer' : 'opacity-0 pointer-events-none'} transition-colors">
                                 <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
                             </button>
                         </div>
@@ -297,6 +314,7 @@ function renderCrumbs(mealPlanData, weekNum) {
 
 // Toggle Chef Dropdown on Click & Immediately Open Dropdown on Mobile/Desktop
 window.toggleChefSelector = function(clickedDayName) {
+    if (!isEditModeActive) return; // Do nothing if edit mode is off
     // Hide all other open chef select boxes and show their display wraps
     document.querySelectorAll('[id^="chef-select-box-"]').forEach(box => {
         const boxDayName = box.id.replace('chef-select-box-', '');
@@ -373,6 +391,7 @@ window.updateChef = async function(crumbId, dayDate, weekNum, dayName, year, che
 
 // Inline Edit Handlers
 window.enableEditMode = function(dayName, originalTitle, crumbId, dayDate, weekNum, year) {
+    if (!isEditModeActive) return; // Do nothing if edit mode is off
     // Cancel any active chef selectors first
     document.querySelectorAll('[id^="chef-select-box-"]').forEach(box => {
         cancelChefSelector(box.id.replace('chef-select-box-', ''));
@@ -446,8 +465,10 @@ window.saveMealTitle = async function(crumbId, dayDate, weekNum, dayName, year) 
     }
 }
 
-// 1-Click Cycle Handler for Mobile & Desktop
+// 1-Click Cycle Handler
 window.handleBadgeClick = async function(crumbId, initials, currentStatus, weekNum) {
+    if (!isEditModeActive) return;
+
     if (!crumbId) {
         alert("Denne dag har ikke fået tildelt en madplan endnu, så der kan ikke tilmeldes.");
         return;
@@ -458,20 +479,30 @@ window.handleBadgeClick = async function(crumbId, initials, currentStatus, weekN
     if (currentStatus === "yes") nextStatus = "maybe";
     else if (currentStatus === "maybe") nextStatus = "no";
     else if (currentStatus === "no") nextStatus = "yes";
-    else nextStatus = "yes"; // default fallback for 'unanswered'
+    else nextStatus = "yes";
 
     try {
-        const response = await fetch(`/api/crumbs/${crumbId}/signup`, {
+        const response = byIdRoute => fetch(`/api/crumbs/${crumbId}/signup`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ initials, status: nextStatus })
+        });
+        
+        const responseObj = await fetch(`/api/crumbs/${crumbId}/signup`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ initials, status: nextStatus })
         });
 
-        if (!response.ok) throw new Error("Failed to update signup");
+        if (!responseObj.ok) throw new Error("Failed to update signup");
 
-        // Reload the week view to reflect the updated database state instantly
         loadWeek(weekNum);
     } catch (err) {
         console.error("Error updating status:", err);
     }
+}
+
+window.toggleGlobalEditMode = function(isActive) {
+    isEditModeActive = isActive;
+    loadWeek(selectedWeek); // Reloads the week view to instantly apply/remove interactivity and background color
 }
