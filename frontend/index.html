@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>.dots v0.4.0-beta</title>
+    <title>bits</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts Inter -->
@@ -35,12 +35,12 @@
     <nav id="topNav" class="border-b border-slate-100 bg-white sticky top-0 z-50 transition-colors">
         <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div class="flex items-center space-x-2">
-                <span class="text-xl font-extrabold tracking-tight text-slate-900">.dots</span>
+                <span class="text-xl font-extrabold tracking-tight text-slate-900">bits</span>
                 <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">v0.4.0</span>
             </div>
             <div class="flex items-center space-x-2 bg-slate-100 p-1 rounded-xl">
-                <button id="navTasksBtn" disabled class="px-4 py-1.5 text-xs font-bold rounded-lg text-slate-400 cursor-not-allowed opacity-60 transition-all">
-                    .dots
+                <button id="navTasksBtn" onclick="switchView('tasks')" class="px-4 py-1.5 text-xs font-bold rounded-lg text-slate-400 cursor-not-allowed opacity-60 transition-all">
+                    dots
                 </button>
                 <button id="navCrumbsBtn" onclick="switchView('crumbs')" class="px-4 py-1.5 text-xs font-bold rounded-lg bg-white text-slate-900 shadow-sm transition-all">
                     crumbs
@@ -95,7 +95,7 @@
                         <i data-lucide="utensils" class="w-6 h-6"></i>
                     </div>
                     <div>
-                        <h1 class="text-2xl font-bold tracking-tight text-slate-900">Madplanen</h1>
+                        <h1 class="text-2xl font-bold tracking-tight text-slate-900">crumbs</h1>
                         <p class="text-xs font-medium text-slate-500">
                             <a href="https://www.youtube.com/watch?v=6ayhqIyfu50" target="_blank" class="hover:underline">
                                 Hold dig i form, spis sundt og tro på dig selv! YEAH! - Asbjørn Riis
@@ -121,9 +121,6 @@
 
             <!-- Legend Bar (Added directly underneath the week selector section) -->
             <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1">
-                <div class="flex items-center space-x-2">
-                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500">Ugentlig Menu</h2>
-                </div>
                 <div class="flex items-center gap-2">
                     <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Redigér</span>
                     <label class="relative inline-flex items-center cursor-pointer">
@@ -152,7 +149,7 @@
         });
 
         function switchView(view) {
-            if (view === 'tasks') return; // Locked .dots - remove line again when it can be activated
+            if (view === 'tasks') return; // Locked dots - remove line again when it can be activated
 
             const tasksView = document.getElementById('tasks-view');
             const crumbsView = document.getElementById('crumbs-view');
@@ -160,11 +157,13 @@
             const navCrumbsBtn = document.getElementById('navCrumbsBtn');
 
             if (view === 'tasks') {
+                document.title = "bits & dots";
                 tasksView.classList.remove('hidden');
                 crumbsView.classList.add('hidden');
                 navTasksBtn.className = "px-4 py-1.5 text-xs font-bold rounded-lg bg-white text-slate-900 shadow-sm transition-all";
                 navCrumbsBtn.className = "px-4 py-1.5 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-900 transition-all";
             } else {
+                document.title = "bits & crumbs";
                 tasksView.classList.add('hidden');
                 crumbsView.classList.remove('hidden');
                 navCrumbsBtn.className = "px-4 py-1.5 text-xs font-bold rounded-lg bg-white text-slate-900 shadow-sm transition-all";
