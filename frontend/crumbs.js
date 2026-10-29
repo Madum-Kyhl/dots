@@ -22,6 +22,7 @@ function getDateForWeekDay(week, year, dayIndex) {
 
 let selectedWeek = getCurrentWeekNumber(new Date());
 let usersList = [];
+let currentPlanMap = {}; // Global store so outside-click listener can access it safely
 const participantsList = ["G", "J", "L", "M", "V", "Z"];
 const standardDays = ["Mandag", "Tirsdag", "Onsdag", "Torsdag", "Fredag", "Lørdag", "Søndag"];
 
@@ -40,6 +41,32 @@ document.addEventListener("DOMContentLoaded", async () => {
         selectedWeek++;
         loadWeek(selectedWeek);
     });
+
+    // Close active edit boxes when clicking anywhere outside
+    document.addEventListener("click", (e) => {
+        // Handle chef dropdown outside click
+        document.querySelectorAll('[id^="chef-select-box-"]').forEach(box => {
+            const dayName = box.id.replace('chef-select-box-', '');
+            const displayWrap = document.getElementById(`chef-display-wrap-${dayName}`);
+            const chefGroup = displayWrap?.closest('.group\\/chef');
+
+            if (!box.contains(e.target) && !chefGroup?.contains(e.target)) {
+                cancelChefSelector(dayName);
+            }
+        });
+
+        // Handle meal title edit outside click
+        document.querySelectorAll('[id^="title-edit-"]').forEach(editBox => {
+            const dayName = editBox.id.replace('title-edit-', '');
+            const displayBox = document.getElementById(`title-display-${dayName}`);
+
+            if (!editBox.contains(e.target) && displayBox && !displayBox.contains(e.target)) {
+                const item = currentPlanMap ? currentPlanMap[dayName] : null;
+                const mealTitle = (!item || !item.meal_title) ? "Ikke planlagt endnu..." : item.meal_title;
+                cancelEditMode(dayName, mealTitle, !item || !item.meal_title);
+            }
+        });
+    });
 });
 
 async function fetchUsers() {
@@ -55,7 +82,7 @@ async function fetchUsers() {
 
 async function loadWeek(weekNum) {
     document.getElementById("weekLabel").textContent = `Uge ${weekNum}`;
-    
+
     try {
         const response = await fetch(`/api/crumbs?week=${weekNum}`);
         if (!response.ok) throw new Error("Failed to fetch crumbs data");
@@ -78,16 +105,16 @@ function renderCrumbs(mealPlanData, weekNum) {
     const todayString = todayObj.toISOString().split('T')[0];
 
     // Create a lookup map of the data received from the backend based on day name or date
-    const planMap = {};
+    currentPlanMap = {};
     if (Array.isArray(mealPlanData)) {
         mealPlanData.forEach(item => {
-            planMap[item.day_name] = item;
+            currentPlanMap[item.day_name] = item;
         });
     }
 
     // Always iterate through all 7 days to ensure the week appears complete
     standardDays.forEach((dayName, index) => {
-        const item = planMap[dayName];
+        const item = currentPlanMap[dayName];
         const isMissing = !item || !item.meal_title || item.meal_title === "Ikke planlagt endnu...";
         const dayDate = (item && item.date) ? item.date : getDateForWeekDay(weekNum, currentYear, index);
 
@@ -145,7 +172,7 @@ function renderCrumbs(mealPlanData, weekNum) {
             const crumbId = item ? item.id : 0;
 
             return `
-                <div class="tooltip-trigger relative inline-block cursor-pointer" tabindex="0" 
+                <div class="tooltip-trigger relative inline-block cursor-pointer flex-shrink-0" tabindex="0" 
                      onclick="handleBadgeClick(${crumbId}, '${initial}', '${status}', ${weekNum})"
                      title="Klik for at ændre status">
                     <div class="w-7 h-7 rounded-full ${circleStyle} flex items-center justify-center shadow-sm transition-transform hover:scale-110">
@@ -162,6 +189,8 @@ function renderCrumbs(mealPlanData, weekNum) {
         const mealTitle = isMissing ? "Ikke planlagt endnu..." : item.meal_title;
         const crumbId = item ? item.id : 0;
         const currentChefId = item ? item.chef_id : null;
+        const currentChefObj = usersList.find(u => u.id === currentChefId);
+        const chefDisplayName = currentChefObj ? currentChefObj.name : "Ikke valgt";
 
         card.innerHTML = `
             <div class="flex items-center justify-between mb-2">
@@ -190,19 +219,18 @@ function renderCrumbs(mealPlanData, weekNum) {
             </div>
             
             <!-- Meal Title & Edit Trigger -->
-            <div class="mb-5 flex items-center justify-between group">
-                <div id="title-display-${dayName}" class="flex items-center space-x-2 flex-1">
-                    <h3 class="text-lg sm:text-xl font-bold ${isMissing ? 'text-slate-400 italic font-medium' : (isToday ? 'text-slate-900' : 'text-slate-800')} tracking-tight leading-snug">
+            <div class="mb-5 flex items-center justify-between">
+                <div id="title-display-${dayName}" class="flex items-center space-x-2 flex-1 cursor-pointer group/title" onclick="enableEditMode('${dayName}', \`${mealTitle}\`, ${crumbId}, '${dayDate}', ${weekNum}, ${currentYear})" title="Klik for at redigere ret">
+                    <h3 class="text-lg sm:text-xl font-bold ${isMissing ? 'text-slate-400 italic font-medium' : (isToday ? 'text-slate-900' : 'text-slate-800')} group-hover/title:text-emerald-600 tracking-tight leading-snug transition-colors">
                         ${mealTitle}
                     </h3>
-                    <button onclick="enableEditMode('${dayName}', \`${mealTitle}\`, ${crumbId}, '${dayDate}', ${weekNum}, ${currentYear})" 
-                            class="p-1 text-slate-400 hover:text-emerald-600 transition-colors" title="Rediger ret">
+                    <button class="p-1 text-slate-400 group-hover/title:text-emerald-600 transition-colors">
                         <i data-lucide="pencil" class="w-4 h-4"></i>
                     </button>
                 </div>
 
                 <!-- Inline Edit Container (Hidden by default) -->
-                <div id="title-edit-${dayName}" class="hidden flex-1 items-center gap-2">
+                <div id="title-edit-${dayName}" class="hidden flex-1 items-center gap-2" onclick="event.stopPropagation()">
                     <input type="text" id="input-${dayName}" value="${isMissing ? '' : mealTitle}" 
                            oninput="checkMealInputChanges('${dayName}', \`${isMissing ? '' : mealTitle}\`)"
                            class="flex-1 px-3 py-1.5 text-sm font-semibold text-slate-900 bg-white border border-emerald-500 rounded-xl focus:outline-none ring-2 ring-emerald-100 shadow-inner">
@@ -218,26 +246,43 @@ function renderCrumbs(mealPlanData, weekNum) {
                 </div>
             </div>
 
-            <!-- Chef Selector & Clear (X) Button -->
-            <div class="flex items-center justify-between pt-3 border-t ${isToday ? 'border-emerald-200/80' : (hasNoChef ? 'border-rose-200' : 'border-slate-200/60')}">
+           <!-- Chef Selector & Signups Footer (Unified hover across hat, label, name, and arrow) -->
+            <div class="flex items-center justify-between pt-3 border-t gap-2 flex-wrap ${isToday ? 'border-emerald-200/80' : (hasNoChef ? 'border-rose-200' : 'border-slate-200/60')}">
                 <div class="flex items-center space-x-2">
-                    <div class="w-6 h-6 rounded-full ${isToday ? 'bg-emerald-100 text-emerald-800' : (hasNoChef ? 'bg-rose-100 text-rose-800' : 'bg-slate-100 text-slate-600')} flex items-center justify-center shadow-sm">
-                        <i data-lucide="chef-hat" class="w-3.5 h-3.5"></i>
-                    </div>
-                    <div class="text-xs flex items-center space-x-1.5">
-                        <span class="text-slate-400 font-medium">Kok:</span>
-                        <select onchange="updateChef(${crumbId}, '${dayDate}', ${weekNum}, '${dayName}', ${currentYear}, this.value)"
-                                class="px-2 py-1 text-xs font-bold text-slate-900 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm cursor-pointer">
-                            <option value="" ${!currentChefId ? 'selected' : ''}>-- Vælg kok --</option>
-                            ${usersList.map(u => `<option value="${u.id}" ${currentChefId === u.id ? 'selected' : ''}>${u.name}</option>`).join('')}
-                        </select>
-                        <button onclick="updateChef(${crumbId}, '${dayDate}', ${weekNum}, '${dayName}', ${currentYear}, null)"
-                                class="p-1 text-slate-400 hover:text-rose-600 bg-white border border-slate-200 rounded-lg shadow-sm transition-colors cursor-pointer" title="Fjern kok (Sæt til ukendt)">
-                            <i data-lucide="x" class="w-3 h-3"></i>
-                        </button>
+                    <div class="text-xs flex items-center space-x-1.5 cursor-pointer group/chef" onclick="toggleChefSelector('${dayName}')" title="Klik for at skifte kok">
+                        <div class="w-6 h-6 rounded-full ${isToday ? 'bg-emerald-100 text-emerald-800' : (hasNoChef ? 'bg-rose-100 text-rose-800' : 'bg-slate-100 text-slate-600')} flex items-center justify-center shadow-sm flex-shrink-0 transition-transform group-hover/chef:scale-110">
+                            <i data-lucide="chef-hat" class="w-3.5 h-3.5"></i>
+                        </div>
+                        <span class="text-slate-400 font-medium group-hover/chef:text-emerald-600 transition-colors" title="Klik for at skifte kok">Kok:</span>
+
+                        <!-- Static Display Name & Dropdown Arrow Icon -->
+                        <div id="chef-display-wrap-${dayName}" class="flex items-center space-x-1">
+                            <span id="chef-text-${dayName}" class="font-bold text-slate-900 group-hover/chef:text-emerald-600 transition-colors">
+                                ${chefDisplayName}
+                            </span>
+                            <button class="p-1 text-slate-400 group-hover/chef:text-emerald-600 transition-colors">
+                                <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+
+                        <!-- Active Dropdown & Rosa X Cancel Button -->
+                        <div id="chef-select-box-${dayName}" class="hidden items-center space-x-1" onclick="event.stopPropagation()">
+                            <select id="chef-dropdown-${dayName}"
+                                    onchange="updateChef(${crumbId}, '${dayDate}', ${weekNum}, '${dayName}', ${currentYear}, this.value)"
+                                    class="px-2 py-1 text-xs font-bold text-slate-900 bg-white border border-emerald-500 rounded-lg focus:outline-none shadow-sm cursor-pointer">
+                                <option value="">-- IKKE VALGT --</option>
+                                ${usersList.map(u => `<option value="${u.id}" ${currentChefId === u.id ? 'selected' : ''}>${u.name}</option>`).join('')}
+                            </select>
+                            <button onclick="cancelChefSelector('${dayName}')" 
+                                    class="p-1.5 bg-rose-100 text-rose-700 rounded-lg transition-all shadow-sm hover:bg-rose-200 cursor-pointer" title="Annuller">
+                                <i data-lucide="x" class="w-3 h-3"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
-                <div class="flex items-center space-x-1 sm:space-x-1.5">
+
+                <!-- Signups Row -->
+                <div class="flex items-center space-x-1 sm:space-x-1.5 flex-shrink-0">
                     ${participantsHTML}
                 </div>
             </div>
@@ -250,7 +295,57 @@ function renderCrumbs(mealPlanData, weekNum) {
     }
 }
 
-// Chef Update Handler
+// Toggle Chef Dropdown on Click & Immediately Open Dropdown on Mobile/Desktop
+window.toggleChefSelector = function(clickedDayName) {
+    // Hide all other open chef select boxes and show their display wraps
+    document.querySelectorAll('[id^="chef-select-box-"]').forEach(box => {
+        const boxDayName = box.id.replace('chef-select-box-', '');
+        if (boxDayName !== clickedDayName) {
+            cancelChefSelector(boxDayName);
+        }
+    });
+
+    // Also close any active meal title edit modes
+    document.querySelectorAll('[id^="title-edit-"]').forEach(editBox => {
+        const dayName = editBox.id.replace('title-edit-', '');
+        const item = currentPlanMap ? currentPlanMap[dayName] : null;
+        const mealTitle = (!item || !item.meal_title) ? "Ikke planlagt endnu..." : item.meal_title;
+        cancelEditMode(dayName, mealTitle, !item || !item.meal_title);
+    });
+
+    const displayWrap = document.getElementById(`chef-display-wrap-${clickedDayName}`);
+    const selectBox = document.getElementById(`chef-select-box-${clickedDayName}`);
+    const selectDropdown = document.getElementById(`chef-dropdown-${clickedDayName}`);
+
+    if (displayWrap && selectBox) {
+        displayWrap.classList.add('hidden');
+        selectBox.classList.remove('hidden');
+        selectBox.classList.add('flex');
+
+        if (selectDropdown) {
+            selectDropdown.focus();
+            try {
+                if (typeof selectDropdown.showPicker === 'function') {
+                    selectDropdown.showPicker();
+                } else {
+                    selectDropdown.click();
+                }
+            } catch (e) {}
+        }
+    }
+}
+
+window.cancelChefSelector = function(dayName) {
+    const displayWrap = document.getElementById(`chef-display-wrap-${dayName}`);
+    const selectBox = document.getElementById(`chef-select-box-${dayName}`);
+
+    if (displayWrap && selectBox) {
+        selectBox.classList.remove('flex');
+        selectBox.classList.add('hidden');
+        displayWrap.classList.remove('hidden');
+    }
+}
+
 window.updateChef = async function(crumbId, dayDate, weekNum, dayName, year, chefId) {
     const parsedChefId = (chefId === "" || chefId === null || chefId === "null") ? null : Number(chefId);
 
@@ -278,9 +373,24 @@ window.updateChef = async function(crumbId, dayDate, weekNum, dayName, year, che
 
 // Inline Edit Handlers
 window.enableEditMode = function(dayName, originalTitle, crumbId, dayDate, weekNum, year) {
+    // Cancel any active chef selectors first
+    document.querySelectorAll('[id^="chef-select-box-"]').forEach(box => {
+        cancelChefSelector(box.id.replace('chef-select-box-', ''));
+    });
+
+    // Also cancel any other active meal title edit modes
+    document.querySelectorAll('[id^="title-edit-"]').forEach(editBox => {
+        const otherDayName = editBox.id.replace('title-edit-', '');
+        if (otherDayName !== dayName) {
+            const item = currentPlanMap ? currentPlanMap[otherDayName] : null;
+            const otherTitle = (!item || !item.meal_title) ? "Ikke planlagt endnu..." : item.meal_title;
+            cancelEditMode(otherDayName, otherTitle, !item || !item.meal_title);
+        }
+    });
+
     document.getElementById(`title-display-${dayName}`).classList.add('hidden');
     document.getElementById(`title-edit-${dayName}`).classList.remove('hidden');
-    
+
     const inputField = document.getElementById(`input-${dayName}`);
     if (originalTitle === "Ikke planlagt endnu...") {
         inputField.value = "";
