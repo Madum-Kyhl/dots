@@ -1,5 +1,34 @@
 const db = require('../../server/database');
 
+// Initialize crumbs-specific tables
+db.serialize(() => {
+    db.run(`
+        CREATE TABLE IF NOT EXISTS crumbs_meals (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            date TEXT NOT NULL UNIQUE,
+            week_number INTEGER NOT NULL,
+            year INTEGER NOT NULL,
+            day_name TEXT NOT NULL,
+            meal_title TEXT NOT NULL,
+            chef_id INTEGER,
+            FOREIGN KEY (chef_id) REFERENCES users(id)
+        )
+    `);
+
+    db.run(`
+        CREATE TABLE IF NOT EXISTS crumbs_signups (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            crumb_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            status TEXT NOT NULL CHECK(status IN ('yes', 'no', 'maybe')),
+            note TEXT,
+            FOREIGN KEY (crumb_id) REFERENCES crumbs_meals(id) ON DELETE CASCADE,
+            FOREIGN KEY (user_id) REFERENCES users(id),
+            UNIQUE(crumb_id, user_id)
+        )
+    `);
+});
+
 function handleCrumbsApi(req, res, parsedUrl, pathname) {
     // API: Get all users for chef selection dropdown
     if (pathname === '/api/users' && req.method === 'GET') {

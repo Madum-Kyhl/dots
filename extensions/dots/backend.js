@@ -1,5 +1,15 @@
 const db = require('../../server/database');
 
+// Initialize dots-specific tables
+db.run(`
+    CREATE TABLE IF NOT EXISTS dots_tasks (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        status TEXT NOT NULL DEFAULT 'TODO',
+        title TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+`);
+
 function handleDotsApi(req, res, parsedUrl, pathname) {
     // API: Get all tasks
     if (pathname === '/api/tasks' && req.method === 'GET') {
