@@ -1,33 +1,35 @@
-<--! >
+<!-- markdownlint-disable MD024 -->
 
 # Changelog
 
 All notable changes to this project will be documented in this file.
 
-## [0.1.0] - 2026-10-24
+## [0.4.0] - 2026-10-29
 
 ### Added
 
-- Initial project conception and project naming.
-- Local Git repository initialization and GitHub remote linking.
-- MVP zero-friction CSV task backlog structure (`tasks.csv`).
-- Raw HTML index prototype for initial task viewing.
-- CSV parsing mechanism to display tasks in a raw HTML list.
-- Comprehensive README documentation covering local test server options (Live Server, `npx serve`, Python).
-
-## [0.2.0] - 2026-10-24
-
-### Added
-
-- Setup Ubuntu server Docker deployment runner.
-- "New Task" input form for user task creation.
-- Dual-box layout separating Pending Tasks (TODO) and Completed Tasks (DONE).
-- MIME-type handling for static ES module serving.
+- Added meal planner feature `crumbs`.
+- Allows all to edit meals, chefs, and participation.
 
 ### Changed
 
-- Refactored and organized frontend architecture into modular components (`app.js`, `state.js`, `ui.js`).
-- Implemented task status updates and local disk writeback mechanisms.
+- Disable task manager `dots` for now and rebranded main page `bits` as an umbrella.
+- Reversed the order in the changelog.
+
+## [0.3.1] - 2026-10-25
+
+### Added
+
+- `.dockerignore` file to optimize the Docker build context and exclude unnecessary workspace files.
+
+### Changed
+
+- Updated root `.gitignore` to comprehensively ignore the `data/` directory and SQLite database files.
+- Refined `README.md` by removing obsolete legacy data migration instructions.
+
+### Removed
+
+- Legacy `tasks.csv` file and `data/migrate.js` migration script now that SQLite auto-initialization is fully established.
 
 ## [0.3.0] - 2026-10-25
 
@@ -55,17 +57,27 @@ All notable changes to this project will be documented in this file.
 - Table/column sorting and filtering controls in the UI.
 - Finalized documentation, environment configuration profiles, and robust error handling.
 
-## [0.3.1] - 2026-10-25
+## [0.2.0] - 2026-10-24
 
 ### Added
 
-- `.dockerignore` file to optimize the Docker build context and exclude unnecessary workspace files.
+- Setup Ubuntu server Docker deployment runner.
+- "New Task" input form for user task creation.
+- Dual-box layout separating Pending Tasks (TODO) and Completed Tasks (DONE).
+- MIME-type handling for static ES module serving.
 
 ### Changed
 
-- Updated root `.gitignore` to comprehensively ignore the `data/` directory and SQLite database files.
-- Refined `README.md` by removing obsolete legacy data migration instructions.
+- Refactored and organized frontend architecture into modular components (`app.js`, `state.js`, `ui.js`).
+- Implemented task status updates and local disk writeback mechanisms.
 
-### Removed
+## [0.1.0] - 2026-10-24
 
-- Legacy `tasks.csv` file and `data/migrate.js` migration script now that SQLite auto-initialization is fully established.
+### Added
+
+- Initial project conception and project naming.
+- Local Git repository initialization and GitHub remote linking.
+- MVP zero-friction CSV task backlog structure (`tasks.csv`).
+- Raw HTML index prototype for initial task viewing.
+- CSV parsing mechanism to display tasks in a raw HTML list.
+- Comprehensive README documentation covering local test server options (Live Server, `npx serve`, Python).

@@ -1,4 +1,4 @@
-# .dots
+# .bits
 
 A lightweight, local-first, containerized task management application designed for simplicity, speed, and strict modularity.
 
@@ -10,7 +10,7 @@ A lightweight, local-first, containerized task management application designed f
 
 ## Prerequisites and Installation
 
-To run `.dots` workspace locally with full disk persistence (or via container), you need **Node.js** and **Docker** installed.
+To run `.bits` workspace locally with full disk persistence (or via container), you need **Node.js** and **Docker** installed.
 
 ### Install Node.js
 
