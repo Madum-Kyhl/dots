@@ -4,7 +4,7 @@ const path = require('path');
 const db = require('./database');
 
 const PORT = 8080;
-const PUBLIC_DIR = path.join(process.cwd(), 'frontend');
+const PUBLIC_DIR = path.join(process.cwd(), 'client');
 
 http.createServer((req, res) => {
     // Log all incoming requests to Docker console
@@ -285,7 +285,7 @@ http.createServer((req, res) => {
         return;
     }
 
-    // Serve static frontend files with correct MIME types
+    // Serve static frontend/client files with correct MIME types
     let filePath = path.join(PUBLIC_DIR, req.url === '/' || req.url.startsWith('/?') ? 'index.html' : req.url.split('?')[0]);
     
     const extname = path.extname(filePath);
