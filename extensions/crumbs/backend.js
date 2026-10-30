@@ -3,7 +3,7 @@ const db = require('../../server/database');
 // Initialize crumbs-specific tables
 db.serialize(() => {
     db.run(`
-        CREATE TABLE IF NOT EXISTS crumbs_meals (
+        CREATE TABLE IF NOT EXISTS crumbs (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             date TEXT NOT NULL UNIQUE,
             week_number INTEGER NOT NULL,
@@ -16,13 +16,13 @@ db.serialize(() => {
     `);
 
     db.run(`
-        CREATE TABLE IF NOT EXISTS crumbs_signups (
+        CREATE TABLE IF NOT EXISTS crumb_signups (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             crumb_id INTEGER NOT NULL,
             user_id INTEGER NOT NULL,
             status TEXT NOT NULL CHECK(status IN ('yes', 'no', 'maybe')),
             note TEXT,
-            FOREIGN KEY (crumb_id) REFERENCES crumbs_meals(id) ON DELETE CASCADE,
+            FOREIGN KEY (crumb_id) REFERENCES crumbs(id) ON DELETE CASCADE,
             FOREIGN KEY (user_id) REFERENCES users(id),
             UNIQUE(crumb_id, user_id)
         )

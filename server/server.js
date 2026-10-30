@@ -7,6 +7,7 @@ const PUBLIC_DIR = path.join(process.cwd(), 'client');
 const EXTENSIONS_DIR = path.join(process.cwd(), 'extensions');
 
 // Dynamic Extension Registry
+const extensionManifests = [];
 const extensionHandlers = [];
 
 // Auto-discover and load extensions on startup
@@ -21,6 +22,7 @@ if (fs.existsSync(EXTENSIONS_DIR)) {
             if (fs.existsSync(manifestPath)) {
                 try {
                     const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+                    extensionManifests.push(manifest);
                     console.log(`[Extension] Discovered: ${manifest.name} (v${manifest.version})`);
 
                     if (fs.existsSync(backendPath)) {
@@ -50,6 +52,13 @@ http.createServer((req, res) => {
         if (handler(req, res, parsedUrl, pathname)) {
             return;
         }
+    }
+
+    // ???
+    if (pathname === '/api/extensions' && req.method === 'GET') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(extensionManifests));
+        return;
     }
 
     // Serve static files: Handle /extensions/ from root, everything else from client/

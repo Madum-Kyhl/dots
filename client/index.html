@@ -33,148 +33,89 @@
     <nav id="topNav" class="border-b border-slate-100 bg-white sticky top-0 z-50 transition-colors">
         <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div class="flex items-center space-x-2">
+                <div class="p-2 bg-slate-100 text-slate-600 rounded-lg flex items-center justify-center">
+                    <i data-lucide="binary" class="w-5 h-5"></i>
+                </div>
                 <span class="text-xl font-extrabold tracking-tight text-slate-900">bits</span>
-                <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">v0.4.0</span>
+                <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">v0.5.0</span>
             </div>
-            <div class="flex items-center space-x-2 bg-slate-100 p-1 rounded-xl">
-                <button id="navTasksBtn" onclick="switchView('tasks')" class="px-4 py-1.5 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-900 transition-all">
-                    dots
-                </button>
-                <button id="navCrumbsBtn" onclick="switchView('crumbs')" class="px-4 py-1.5 text-xs font-bold rounded-lg bg-white text-slate-900 shadow-sm transition-all">
-                    crumbs
-                </button>
-            </div>
+
+            <!-- Dynamically populated extension navigation buttons -->
+            <div id="extensionNav" class="flex items-center space-x-2 bg-slate-100 p-1 rounded-xl"></div>
         </div>
     </nav>
 
-    <!-- Main Container -->
-    <div class="max-w-3xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        
-        <!-- TASKS VIEW (deactivated as default) -->
-        <section id="tasks-view" class="hidden space-y-6">
-            <h1 class="text-2xl font-bold tracking-tight text-slate-900">Task Manager</h1>
+    <!-- Dynamic Extension View Host Container -->
+    <main id="extensionHost" class="max-w-3xl mx-auto px-4 py-8 sm:px-6 lg:px-8"></main>
 
-            <!-- Task Creation Form -->
-            <form id="add-task-form" class="flex gap-2">
-                <input type="text" id="task-title-input" placeholder="Enter new task title..." required class="flex-1 px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
-                <button type="submit" class="px-5 py-2 bg-slate-900 text-white font-semibold rounded-xl hover:bg-slate-800 text-sm transition-all">Add Task</button>
-            </form>
-
-            <hr class="border-slate-100 my-6">
-
-            <!-- Side-by-Side Table Layout -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-slate-50/50 border border-slate-200/80 p-5 rounded-2xl">
-                    <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4">Pending Tasks (TODO)</h2>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm">
-                            <tbody id="todo-table-body" class="divide-y divide-slate-200/60"></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="bg-slate-50/50 border border-slate-200/80 p-5 rounded-2xl">
-                    <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4">Completed Tasks (DONE)</h2>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm">
-                            <tbody id="done-table-body" class="divide-y divide-slate-200/60"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- CRUMBS VIEW (Meal Planner) -->
-        <section id="crumbs-view" class="space-y-6">
-            <!-- Top Header -->
-            <header class="flex flex-col sm:flex-row items-center justify-between pb-6 mb-8 border-b border-slate-100 gap-4">
-                <div class="flex items-center space-x-3">
-                    <div class="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl">
-                        <i data-lucide="utensils" class="w-6 h-6"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-2xl font-bold tracking-tight text-slate-900">crumbs</h1>
-                        <p class="text-xs font-medium text-slate-500">
-                            <a href="https://www.youtube.com/watch?v=6ayhqIyfu50" target="_blank" class="hover:underline">
-                                Hold dig i form, spis sundt og tro på dig selv! YEAH! - Asbjørn Riis
-                            </a>
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Week Switcher Controls -->
-                <div class="flex items-center space-x-3 bg-slate-50 p-1.5 rounded-2xl border border-slate-200/80 shadow-sm">
-                    <button id="prevWeekBtn" class="p-2 rounded-xl bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100 active:scale-95 transition-all shadow-sm border border-slate-200/60 flex items-center justify-center">
-                        <i data-lucide="chevron-left" class="w-5 h-5"></i>
-                    </button>
-                    <div class="px-4 text-center min-w-[110px]">
-                        <span id="weekLabel" class="text-base font-bold text-slate-900 tracking-wide block">Week 43</span>
-                        <span id="yearLabel" class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">2026</span>
-                    </div>
-                    <button id="nextWeekBtn" class="p-2 rounded-xl bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100 active:scale-95 transition-all shadow-sm border border-slate-200/60 flex items-center justify-center">
-                        <i data-lucide="chevron-right" class="w-5 h-5"></i>
-                    </button>
-                </div>
-            </header>
-
-            <!-- Legend Bar (Added directly underneath the week selector section) -->
-            <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1">
-                <div class="flex items-center gap-2">
-                    <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Redigér</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="editModeToggle" class="sr-only peer" onchange="toggleGlobalEditMode(this.checked)">
-                        <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500 shadow-sm"></div>
-                    </label>
-                </div>
-                <div class="flex items-center space-x-3 text-[11px] text-slate-500">
-                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-600"></span> Spiser</span>
-                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span> Måske</span>
-                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-rose-100 border border-rose-300"></span> Afbud</span>
-                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-slate-50 border border-dashed border-slate-300"></span> Ubesvaret</span>
-                </div>
-            </div>
-
-            <!-- Stacked Days List Container -->
-            <main id="mealsContainer" class="flex flex-col space-y-4"></main>
-        </section>
-    </div>
-
-    <!-- View Switcher Script -->
+    <!-- Dynamic Platform Bootstrapper -->
     <script>
-        // Ensureing that crumbs is shown as default upon load
-        document.addEventListener("DOMContentLoaded", () => {
-            switchView('crumbs');
-        });
+        async function initPlatform() {
+            try {
+                const res = await fetch('/api/extensions');
+                if (!res.ok) throw new Error('Failed to fetch extensions');
+                const extensions = await res.json();
 
-        function switchView(view) {
-            const tasksView = document.getElementById('tasks-view');
-            const crumbsView = document.getElementById('crumbs-view');
-            const navTasksBtn = document.getElementById('navTasksBtn');
-            const navCrumbsBtn = document.getElementById('navCrumbsBtn');
+                const navContainer = document.getElementById('extensionNav');
+                const hostContainer = document.getElementById('extensionHost');
 
-            if (view === 'tasks') {
-                document.title = "bits & dots";
-                tasksView.classList.remove('hidden');
-                crumbsView.classList.add('hidden');
-                navTasksBtn.className = "px-4 py-1.5 text-xs font-bold rounded-lg bg-white text-slate-900 shadow-sm transition-all";
-                navCrumbsBtn.className = "px-4 py-1.5 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-900 transition-all";
-            } else {
-                document.title = "bits & crumbs";
-                tasksView.classList.add('hidden');
-                crumbsView.classList.remove('hidden');
-                navCrumbsBtn.className = "px-4 py-1.5 text-xs font-bold rounded-lg bg-white text-slate-900 shadow-sm transition-all";
-                navTasksBtn.className = "px-4 py-1.5 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-900 transition-all";
-                
-                // Initialize Lucide icons when rendering crumbs view
-                if (typeof lucide !== 'undefined') {
-                    lucide.createIcons();
+                navContainer.innerHTML = '';
+                hostContainer.innerHTML = '';
+
+                extensions.forEach((ext, index) => {
+                    // 1. Generate Navigation Button Dynamically
+                    const btn = document.createElement('button');
+                    btn.id = `nav-${ext.id}-btn`;
+                    btn.className = "px-4 py-1.5 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-900 transition-all cursor-pointer";
+                    btn.textContent = ext.name;
+                    btn.onclick = () => switchView(ext.id);
+                    navContainer.appendChild(btn);
+
+                    // 2. Generate View Section Container Dynamically
+                    const section = document.createElement('section');
+                    section.id = `${ext.id}-view`;
+                    section.className = "hidden space-y-6";
+                    hostContainer.appendChild(section);
+
+                    // 3. Dynamically Load Extension Frontend Script Module
+                    const script = document.createElement('script');
+                    script.type = 'module';
+                    script.src = `/extensions/${ext.id}/frontend.js`;
+                    document.body.appendChild(script);
+                });
+
+                if (extensions.length > 0) {
+                    switchView(extensions[0].id);
                 }
+            } catch (err) {
+                console.error('Error initializing dynamic platform:', err);
             }
         }
-    </script>
 
-    <!-- Existing Application Scripts -->
-    <script type="module" src="/extensions/dots/frontend.js"></script>
-    <script type="module" src="/extensions/crumbs/frontend.js"></script>
+        function switchView(viewId) {
+            const navContainer = document.getElementById('extensionNav');
+            if (!navContainer) return;
+
+            Array.from(navContainer.children).forEach(btn => {
+                const extId = btn.id.replace('nav-', '').replace('-btn', '');
+                const viewEl = document.getElementById(`${extId}-view`);
+
+                if (extId === viewId) {
+                    btn.className = "px-4 py-1.5 text-xs font-bold rounded-lg bg-white text-slate-900 shadow-sm transition-all";
+                    if (viewEl) viewEl.classList.remove('hidden');
+                    document.title = `bits & ${extId}`;
+                } else {
+                    btn.className = "px-4 py-1.5 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-900 transition-all";
+                    if (viewEl) viewEl.classList.add('hidden');
+                }
+            });
+
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', initPlatform);
+    </script>
 </body>
 </html>
