@@ -37,7 +37,7 @@
                 <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">v0.4.0</span>
             </div>
             <div class="flex items-center space-x-2 bg-slate-100 p-1 rounded-xl">
-                <button id="navTasksBtn" onclick="switchView('tasks')" class="px-4 py-1.5 text-xs font-bold rounded-lg text-slate-400 cursor-not-allowed opacity-60 transition-all">
+                <button id="navTasksBtn" onclick="switchView('tasks')" class="px-4 py-1.5 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-900 transition-all">
                     dots
                 </button>
                 <button id="navCrumbsBtn" onclick="switchView('crumbs')" class="px-4 py-1.5 text-xs font-bold rounded-lg bg-white text-slate-900 shadow-sm transition-all">
@@ -147,8 +147,6 @@
         });
 
         function switchView(view) {
-            if (view === 'tasks') return; // Locked dots - remove line again when it can be activated
-
             const tasksView = document.getElementById('tasks-view');
             const crumbsView = document.getElementById('crumbs-view');
             const navTasksBtn = document.getElementById('navTasksBtn');
@@ -176,7 +174,7 @@
     </script>
 
     <!-- Existing Application Scripts -->
-    <script type="module" src="app.js"></script>
+    <script type="module" src="/extensions/dots/app.js"></script>
     <script type="module" src="/extensions/crumbs/crumbs.js"></script>
 </body>
 </html>
