@@ -197,13 +197,13 @@ function renderCrumbs(mealPlanData, weekNum) {
             const crumbId = item ? item.id : 0;
 
             return `
-                <div class="tooltip-trigger relative inline-block ${isEditModeActive ? 'cursor-pointer' : 'pointer-events-none'} flex-shrink-0" tabindex="0" 
-                     onclick="handleBadgeClick(${crumbId}, '${initial}', '${status}', ${weekNum}, '${dayDate}', '${dayName}', ${currentYear})"
-                     title="Klik for at ændre status">
-                    <div class="w-7 h-7 rounded-full ${circleStyle} flex items-center justify-center shadow-sm transition-transform ${isEditModeActive ? 'hover:scale-110' : ''}">
+                <div class="tooltip-trigger relative inline-block group flex-shrink-0" tabindex="0" 
+                    onclick="${isEditModeActive ? `handleBadgeClick(${crumbId}, '${initial}', '${status}', ${weekNum}, '${dayDate}', '${dayName}', ${currentYear})` : ''}"
+                    title="Klik for at ændre status">
+                    <div class="w-7 h-7 rounded-full ${circleStyle} flex items-center justify-center shadow-sm transition-transform ${isEditModeActive ? 'hover:scale-110 cursor-pointer' : 'cursor-default'}">
                         <span class="text-xs font-bold leading-none">${innerText}</span>
                     </div>
-                    <div class="tooltip-content absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1 bg-slate-900 text-white text-[11px] font-medium rounded-lg whitespace-nowrap shadow-xl z-20 pointer-events-none">
+                    <div class="tooltip-content absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1 bg-slate-900 text-white text-[11px] font-medium rounded-lg whitespace-nowrap shadow-xl z-20 pointer-events-none opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-150">
                         ${tooltipText}
                         <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900"></div>
                     </div>
