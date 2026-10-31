@@ -16,16 +16,21 @@ const db = new sqlite3.Database(dbPath, (err) => {
     }
 });
 
-// Initialize full schema once
-db.serialize(() => {
-    // Shared users table for bits platform
-    db.run(`
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL UNIQUE,
-            initials TEXT NOT NULL
-        )
-    `);
-});
+// Load and execute core schema from an external file
+const schemaPath = path.join(__dirname, 'schema.sql');
+if (fs.existsSync(schemaPath)) {
+    const schemaSql = fs.readFileSync(schemaPath, 'utf8');
+    db.serialize(() => {
+        db.exec(schemaSql, (err) => {
+            if (err) {
+                console.error('Failed to execute core database schema:', err.message);
+            } else {
+                console.log('Core database schema initialized successfully.');
+            }
+        });
+    });
+} else {
+    console.warn('Warning: Core schema file (server/schema.sql) not found.');
+}
 
 module.exports = db;

@@ -48,74 +48,7 @@
     <!-- Dynamic Extension View Host Container -->
     <main id="extensionHost" class="max-w-3xl mx-auto px-4 py-8 sm:px-6 lg:px-8"></main>
 
-    <!-- Dynamic Platform Bootstrapper -->
-    <script>
-        async function initPlatform() {
-            try {
-                const res = await fetch('/api/extensions');
-                if (!res.ok) throw new Error('Failed to fetch extensions');
-                const extensions = await res.json();
-
-                const navContainer = document.getElementById('extensionNav');
-                const hostContainer = document.getElementById('extensionHost');
-
-                navContainer.innerHTML = '';
-                hostContainer.innerHTML = '';
-
-                extensions.forEach((ext, index) => {
-                    // 1. Generate Navigation Button Dynamically
-                    const btn = document.createElement('button');
-                    btn.id = `nav-${ext.id}-btn`;
-                    btn.className = "px-4 py-1.5 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-900 transition-all cursor-pointer";
-                    btn.textContent = ext.name;
-                    btn.onclick = () => switchView(ext.id);
-                    navContainer.appendChild(btn);
-
-                    // 2. Generate View Section Container Dynamically
-                    const section = document.createElement('section');
-                    section.id = `${ext.id}-view`;
-                    section.className = "hidden space-y-6";
-                    hostContainer.appendChild(section);
-
-                    // 3. Dynamically Load Extension Frontend Script Module
-                    const script = document.createElement('script');
-                    script.type = 'module';
-                    script.src = `/extensions/${ext.id}/frontend.js`;
-                    document.body.appendChild(script);
-                });
-
-                if (extensions.length > 0) {
-                    switchView(extensions[0].id);
-                }
-            } catch (err) {
-                console.error('Error initializing dynamic platform:', err);
-            }
-        }
-
-        function switchView(viewId) {
-            const navContainer = document.getElementById('extensionNav');
-            if (!navContainer) return;
-
-            Array.from(navContainer.children).forEach(btn => {
-                const extId = btn.id.replace('nav-', '').replace('-btn', '');
-                const viewEl = document.getElementById(`${extId}-view`);
-
-                if (extId === viewId) {
-                    btn.className = "px-4 py-1.5 text-xs font-bold rounded-lg bg-white text-slate-900 shadow-sm transition-all";
-                    if (viewEl) viewEl.classList.remove('hidden');
-                    document.title = `bits & ${extId}`;
-                } else {
-                    btn.className = "px-4 py-1.5 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-900 transition-all";
-                    if (viewEl) viewEl.classList.add('hidden');
-                }
-            });
-
-            if (typeof lucide !== 'undefined') {
-                lucide.createIcons();
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', initPlatform);
-    </script>
+    <!-- Main Platform Client Script -->
+    <script type="module" src="/app.js"></script>
 </body>
 </html>

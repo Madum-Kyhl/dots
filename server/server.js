@@ -6,13 +6,16 @@ const PORT = 8080;
 const PUBLIC_DIR = path.join(process.cwd(), 'client');
 const EXTENSIONS_DIR = path.join(process.cwd(), 'extensions');
 
-// Dynamic Extension Registry
+// Runtime extension registries
 const extensionManifests = [];
 const extensionHandlers = [];
 
-// Auto-discover and load extensions on startup
+
+// Startup Initialization: Scan the /extensions directory for plug-and-play modules,
+// read their manifests, cache metadata, and load backend routers dynamically.
 if (fs.existsSync(EXTENSIONS_DIR)) {
     const extFolders = fs.readdirSync(EXTENSIONS_DIR, { withFileTypes: true });
+    
     extFolders.forEach(dirent => {
         if (dirent.isDirectory()) {
             const extName = dirent.name;
@@ -40,28 +43,30 @@ if (fs.existsSync(EXTENSIONS_DIR)) {
     });
 }
 
+// HTTP Server Core Request Lifecycle
 http.createServer((req, res) => {
-    // Log all incoming requests to Docker console
     console.log(`[HTTP] ${req.method} ${req.url}`);
     
     const parsedUrl = new URL(req.url, `http://${req.headers.host}`);
     const pathname = parsedUrl.pathname;
 
-    // Delegate API requests to dynamically registered extension handlers
-    for (const handler of extensionHandlers) {
-        if (handler(req, res, parsedUrl, pathname)) {
-            return;
-        }
-    }
-
-    // ???
+    // Core Platform System APIs: Handle built-in infrastructure routes prior to delegating to extension handlers.
     if (pathname === '/api/extensions' && req.method === 'GET') {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(extensionManifests));
         return;
     }
 
-    // Serve static files: Handle /extensions/ from root, everything else from client/
+    // Extension Backend Delegation: Iterate through dynamically loaded extension handlers. If a handler matches
+    // and processes the request, execution short-circuits and returns.
+    for (const handler of extensionHandlers) {
+        if (handler(req, res, parsedUrl, pathname)) {
+            return;
+        }
+    }
+
+    // Static File Serving Fallback: Resolve and serve static web assets from either the /extensions root or the 
+    // client public directory.
     let filePath;
     if (pathname.startsWith('/extensions/')) {
         filePath = path.join(process.cwd(), pathname);
@@ -71,6 +76,7 @@ http.createServer((req, res) => {
     
     const extname = path.extname(filePath);
     let contentType = 'text/html';
+    
     switch (extname) {
         case '.js':
             contentType = 'application/javascript';
