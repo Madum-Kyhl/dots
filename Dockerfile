@@ -4,4 +4,4 @@ COPY package*.json ./
 RUN npm install --production
 COPY . .
 EXPOSE 8080
-CMD ["node", "backend/server.js"]
+CMD ["node", "server/server.js"]

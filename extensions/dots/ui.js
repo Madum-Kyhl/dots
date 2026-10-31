@@ -1,27 +1,27 @@
-import { tasks, toggleTaskStatus } from './state.js';
+import { dots, toggleDotStatus } from './state.js';
 
 export function renderUI() {
-    const todoContainer = document.getElementById('todo-table-body');
+    const dotsContainer = document.getElementById('dots-table-body');
     const doneContainer = document.getElementById('done-table-body');
 
-    if (!todoContainer || !doneContainer) return;
+    if (!dotsContainer || !doneContainer) return;
 
-    todoContainer.innerHTML = '';
+    dotsContainer.innerHTML = '';
     doneContainer.innerHTML = '';
 
-    tasks.forEach((task) => {
+    dots.forEach((dot) => {
         const tr = document.createElement('tr');
 
-        if (task.status === 'TODO') {
+        if (dot.status === 'dots') {
             tr.innerHTML = `
-                <td>${escapeHTML(task.title)}</td>
-                <td><button data-id="${task.id}" class="toggle-btn">Mark Done</button></td>
+                <td>${escapeHTML(dot.title)}</td>
+                <td><button data-id="${dot.id}" class="toggle-btn">trace</button></td>
             `;
-            todoContainer.appendChild(tr);
+            dotsContainer.appendChild(tr);
         } else {
             tr.innerHTML = `
-                <td><del>${escapeHTML(task.title)}</del></td>
-                <td><button data-id="${task.id}" class="toggle-btn">Reopen</button></td>
+                <td><del>${escapeHTML(dot.title)}</del></td>
+                <td><button data-id="${dot.id}" class="toggle-btn">retrace</button></td>
             `;
             doneContainer.appendChild(tr);
         }
@@ -30,7 +30,7 @@ export function renderUI() {
     document.querySelectorAll('.toggle-btn').forEach(btn => {
         btn.onclick = async (e) => {
             const id = e.target.getAttribute('data-id');
-            await toggleTaskStatus(id);
+            await toggleDotStatus(id);
             renderUI();
         };
     });

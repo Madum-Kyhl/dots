@@ -4,6 +4,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.0] - 2026-10-30
+
+### Changed
+
+- Restructed to support `bits` as umpbrella and move out `crumps` and `dots` as extensions.
+- Redesigned and rebranded `dots` into its version [0.1.0]
+
 ## [0.4.0] - 2026-10-29
 
 ### Added

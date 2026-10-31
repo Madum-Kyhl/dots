@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>bits</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-white min-h-screen text-slate-800 antialiased selection:bg-emerald-100 selection:text-emerald-900">
+
+    <!-- Global Navigation Switcher -->
+    <nav id="topNav" class="border-b border-slate-100 bg-white sticky top-0 z-50 transition-colors">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <div class="p-2 bg-slate-100 text-slate-600 rounded-lg flex items-center justify-center">
+                    <i data-lucide="binary" class="w-5 h-5"></i>
+                </div>
+                <span class="text-xl font-extrabold tracking-tight text-slate-900">bits</span>
+                <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">v0.5.0</span>
+            </div>
+
+            <!-- Dynamically populated extension navigation buttons -->
+            <div id="extensionNav" class="flex items-center space-x-2 bg-slate-100 p-1 rounded-xl"></div>
+        </div>
+    </nav>
+
+    <!-- Dynamic Extension View Host Container -->
+    <main id="extensionHost" class="max-w-3xl mx-auto px-4 py-8 sm:px-6 lg:px-8"></main>
+
+    <!-- Main Platform Client Script -->
+    <script type="module" src="/app.js"></script>
+</body>
+</html>

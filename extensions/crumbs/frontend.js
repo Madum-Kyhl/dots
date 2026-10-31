@@ -1,3 +1,77 @@
+async function initCrumbs() {
+    let appName = 'crumbs';
+    let appVersion = 'v0.1.0';
+    let appIcon = 'utensils';
+
+    try {
+        const manifestUrl = new URL('./manifest.json', import.meta.url);
+        const manifestRes = await fetch(manifestUrl);
+        if (manifestRes.ok) {
+            const manifest = await manifestRes.json();
+            if (manifest.name) appName = manifest.name;
+            if (manifest.version) appVersion = `v${manifest.version}`;
+            if (manifest.icon) appIcon = manifest.icon;
+        }
+    } catch (err) {
+        console.warn("Could not load manifest.json, using defaults.", err);
+    }
+
+    document.getElementById('crumbs-view').innerHTML = `
+        <!-- Top Header -->
+        <header class="flex flex-col sm:flex-row items-center justify-between pb-6 mb-8 border-b border-slate-100 gap-4">
+            <div class="flex items-center space-x-2">
+                <div class="p-2 bg-slate-100 text-slate-600 rounded-lg flex items-center justify-center">
+                    <i data-lucide="${appIcon}" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-extrabold tracking-tight text-slate-900">${appName}</h1>
+                </div>
+                <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">${appVersion}</span>
+            </div>
+
+            <!-- Week Switcher Controls -->
+            <div class="flex items-center space-x-3 bg-slate-50 p-1.5 rounded-2xl border border-slate-200/80 shadow-sm">
+                <button id="prevWeekBtn" class="p-2 rounded-xl bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100 active:scale-95 transition-all shadow-sm border border-slate-200/60 flex items-center justify-center">
+                    <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                </button>
+                <div class="px-4 text-center min-w-[90px]">
+                    <span id="weekLabel" class="text-xl font-extrabold tracking-tight text-slate-900">uge 44</span>
+                </div>
+                <button id="nextWeekBtn" class="p-2 rounded-xl bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100 active:scale-95 transition-all shadow-sm border border-slate-200/60 flex items-center justify-center">
+                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Legend Bar -->
+        <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1">
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Redigér</span>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="editModeToggle" class="sr-only peer" onchange="toggleGlobalEditMode(this.checked)">
+                    <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500 shadow-sm"></div>
+                </label>
+            </div>
+            <div class="flex items-center space-x-3 text-[11px] text-slate-500">
+                <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-600"></span> Spiser</span>
+                <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span> Måske</span>
+                <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-rose-100 border border-rose-300"></span> Afbud</span>
+                <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-slate-50 border border-dashed border-slate-300"></span> Ubesvaret</span>
+            </div>
+        </div>
+
+        <!-- Stacked Days List Container -->
+        <main id="mealsContainer" class="flex flex-col space-y-4"></main>
+    `;
+
+    if (window.lucide) {
+        window.lucide.createIcons();
+    }
+
+    // Now that the elements are guaranteed to exist in the DOM, trigger app logic
+    await initCrumbsApp();
+}
+
 function getCurrentWeekNumber(date) {
     const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
     d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
@@ -31,52 +105,9 @@ function getDateForWeekDay(week, year, dayIndex) {
 let isEditModeActive = false;
 let selectedWeek = getCurrentWeekNumber(new Date());
 let usersList = [];
-let currentPlanMap = {}; // Global store so outside-click listener can access it safely
+let currentPlanMap = {};
 const participantsList = ["G", "J", "L", "M", "V", "Z"];
 const standardDays = ["Mandag", "Tirsdag", "Onsdag", "Torsdag", "Fredag", "Lørdag", "Søndag"];
-
-document.addEventListener("DOMContentLoaded", async () => {
-    if (!document.getElementById("mealsContainer")) return;
-
-    await fetchUsers();
-    loadWeek(selectedWeek);
-
-    document.getElementById("prevWeekBtn").addEventListener("click", () => {
-        selectedWeek--;
-        loadWeek(selectedWeek);
-    });
-
-    document.getElementById("nextWeekBtn").addEventListener("click", () => {
-        selectedWeek++;
-        loadWeek(selectedWeek);
-    });
-
-    // Close active edit boxes when clicking anywhere outside
-    document.addEventListener("click", (e) => {
-        // Handle chef dropdown outside click
-        document.querySelectorAll('[id^="chef-select-box-"]').forEach(box => {
-            const dayName = box.id.replace('chef-select-box-', '');
-            const displayWrap = document.getElementById(`chef-display-wrap-${dayName}`);
-            const chefGroup = displayWrap?.closest('.group\\/chef');
-
-            if (!box.contains(e.target) && !chefGroup?.contains(e.target)) {
-                cancelChefSelector(dayName);
-            }
-        });
-
-        // Handle meal title edit outside click
-        document.querySelectorAll('[id^="title-edit-"]').forEach(editBox => {
-            const dayName = editBox.id.replace('title-edit-', '');
-            const displayBox = document.getElementById(`title-display-${dayName}`);
-
-            if (!editBox.contains(e.target) && displayBox && !displayBox.contains(e.target)) {
-                const item = currentPlanMap ? currentPlanMap[dayName] : null;
-                const mealTitle = (!item || !item.meal_title) ? "Ikke planlagt endnu..." : item.meal_title;
-                cancelEditMode(dayName, mealTitle, !item || !item.meal_title);
-            }
-        });
-    });
-});
 
 async function fetchUsers() {
     try {
@@ -90,7 +121,8 @@ async function fetchUsers() {
 }
 
 async function loadWeek(weekNum) {
-    document.getElementById("weekLabel").textContent = `Uge ${weekNum}`;
+    const weekLabel = document.getElementById("weekLabel");
+    if (weekLabel) weekLabel.textContent = `uge ${weekNum}`;
 
     // Apply pale green background to body and top navigation when edit mode is active
     const topNav = document.getElementById('topNav');
@@ -115,14 +147,16 @@ async function loadWeek(weekNum) {
         renderCrumbs(data, weekNum);
     } catch (err) {
         console.error("Error loading crumbs:", err);
-        document.getElementById("mealsContainer").innerHTML = `
-            <p class="text-xs text-slate-400 text-center py-8">Kunne ikke hente madplan for uge ${weekNum}.</p>
-        `;
+        const container = document.getElementById("mealsContainer");
+        if (container) {
+            container.innerHTML = `<p class="text-xs text-slate-400 text-center py-8">Kunne ikke hente madplan for uge ${weekNum}.</p>`;
+        }
     }
 }
 
 function renderCrumbs(mealPlanData, weekNum) {
     const mealsContainer = document.getElementById("mealsContainer");
+    if (!mealsContainer) return;
     mealsContainer.innerHTML = "";
 
     const todayObj = new Date();
@@ -197,13 +231,13 @@ function renderCrumbs(mealPlanData, weekNum) {
             const crumbId = item ? item.id : 0;
 
             return `
-                <div class="tooltip-trigger relative inline-block ${isEditModeActive ? 'cursor-pointer' : 'pointer-events-none'} flex-shrink-0" tabindex="0" 
-                     onclick="handleBadgeClick(${crumbId}, '${initial}', '${status}', ${weekNum}, '${dayDate}', '${dayName}', ${currentYear})"
-                     title="Klik for at ændre status">
-                    <div class="w-7 h-7 rounded-full ${circleStyle} flex items-center justify-center shadow-sm transition-transform ${isEditModeActive ? 'hover:scale-110' : ''}">
+                <div class="tooltip-trigger relative inline-block group flex-shrink-0" tabindex="0" 
+                    onclick="${isEditModeActive ? `handleBadgeClick(${crumbId}, '${initial}', '${status}', ${weekNum}, '${dayDate}', '${dayName}', ${currentYear})` : ''}"
+                    title="Klik for at ændre status">
+                    <div class="w-7 h-7 rounded-full ${circleStyle} flex items-center justify-center shadow-sm transition-transform ${isEditModeActive ? 'hover:scale-110 cursor-pointer' : 'cursor-default'}">
                         <span class="text-xs font-bold leading-none">${innerText}</span>
                     </div>
-                    <div class="tooltip-content absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1 bg-slate-900 text-white text-[11px] font-medium rounded-lg whitespace-nowrap shadow-xl z-20 pointer-events-none">
+                    <div class="tooltip-content absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1 bg-slate-900 text-white text-[11px] font-medium rounded-lg whitespace-nowrap shadow-xl z-20 pointer-events-none opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-150">
                         ${tooltipText}
                         <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900"></div>
                     </div>
@@ -359,7 +393,7 @@ window.toggleChefSelector = function(clickedDayName) {
             } catch (e) {}
         }
     }
-}
+};
 
 window.cancelChefSelector = function(dayName) {
     const displayWrap = document.getElementById(`chef-display-wrap-${dayName}`);
@@ -370,7 +404,7 @@ window.cancelChefSelector = function(dayName) {
         selectBox.classList.add('hidden');
         displayWrap.classList.remove('hidden');
     }
-}
+};
 
 window.updateChef = async function(crumbId, dayDate, weekNum, dayName, year, chefId) {
     const parsedChefId = (chefId === "" || chefId === null || chefId === "null") ? null : Number(chefId);
@@ -390,12 +424,11 @@ window.updateChef = async function(crumbId, dayDate, weekNum, dayName, year, che
         });
 
         if (!response.ok) throw new Error("Failed to update chef");
-
         loadWeek(weekNum);
     } catch (err) {
         console.error("Error updating chef:", err);
     }
-}
+};
 
 // Inline Edit Handlers
 window.enableEditMode = function(dayName, originalTitle, crumbId, dayDate, weekNum, year) {
@@ -426,16 +459,20 @@ window.enableEditMode = function(dayName, originalTitle, crumbId, dayDate, weekN
     }
     inputField.focus();
     inputField.setSelectionRange(inputField.value.length, inputField.value.length);
-}
+};
 
 window.cancelEditMode = function(dayName, originalTitle, isMissing) {
-    document.getElementById(`title-edit-${dayName}`).classList.add('hidden');
-    document.getElementById(`title-display-${dayName}`).classList.remove('hidden');
-}
+    const editEl = document.getElementById(`title-edit-${dayName}`);
+    const displayEl = document.getElementById(`title-display-${dayName}`);
+    if (editEl) editEl.classList.add('hidden');
+    if (displayEl) displayEl.classList.remove('hidden');
+};
 
 window.checkMealInputChanges = function(dayName, originalTitle) {
-    const inputVal = document.getElementById(`input-${dayName}`).value.trim();
+    const inputEl = document.getElementById(`input-${dayName}`);
     const saveBtn = document.getElementById(`save-btn-${dayName}`);
+    if (!inputEl || !saveBtn) return;
+    const inputVal = inputEl.value.trim();
     const cleanOriginal = originalTitle === "Ikke planlagt endnu..." ? "" : originalTitle;
 
     if (inputVal !== cleanOriginal && inputVal.length > 0) {
@@ -445,10 +482,12 @@ window.checkMealInputChanges = function(dayName, originalTitle) {
         saveBtn.disabled = true;
         saveBtn.classList.add('opacity-50', 'cursor-not-allowed');
     }
-}
+};
 
 window.saveMealTitle = async function(crumbId, dayDate, weekNum, dayName, year) {
-    const inputVal = document.getElementById(`input-${dayName}`).value.trim();
+    const inputEl = document.getElementById(`input-${dayName}`);
+    if (!inputEl) return;
+    const inputVal = inputEl.value.trim();
     if (!inputVal) return;
 
     try {
@@ -466,16 +505,15 @@ window.saveMealTitle = async function(crumbId, dayDate, weekNum, dayName, year) 
         });
 
         if (!response.ok) throw new Error("Failed to update meal title");
-
         loadWeek(weekNum);
     } catch (err) {
         console.error("Error saving meal title:", err);
     }
-}
+};
 
 // 1-Click Cycle Handler
 window.handleBadgeClick = async function(crumbId, initials, currentStatus, weekNum) {
-    if (!isEditModeActive) return;
+    if (!isEditModeActive) return; // Do nothing if edit mode is off
 
     if (!crumbId) {
         alert("Denne dag har ikke fået tildelt en madplan endnu, så der kan ikke tilmeldes.");
@@ -487,15 +525,8 @@ window.handleBadgeClick = async function(crumbId, initials, currentStatus, weekN
     if (currentStatus === "yes") nextStatus = "maybe";
     else if (currentStatus === "maybe") nextStatus = "no";
     else if (currentStatus === "no") nextStatus = "yes";
-    else nextStatus = "yes";
 
     try {
-        const response = byIdRoute => fetch(`/api/crumbs/${crumbId}/signup`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ initials, status: nextStatus })
-        });
-        
         const responseObj = await fetch(`/api/crumbs/${crumbId}/signup`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -503,14 +534,71 @@ window.handleBadgeClick = async function(crumbId, initials, currentStatus, weekN
         });
 
         if (!responseObj.ok) throw new Error("Failed to update signup");
-
         loadWeek(weekNum);
     } catch (err) {
         console.error("Error updating status:", err);
     }
-}
+};
 
 window.toggleGlobalEditMode = function(isActive) {
     isEditModeActive = isActive;
-    loadWeek(selectedWeek); // Reloads the week view to instantly apply/remove interactivity and background color
+    loadWeek(selectedWeek);
+};
+
+async function initCrumbsApp() {
+    if (!document.getElementById("mealsContainer")) return;
+
+    await fetchUsers();
+    loadWeek(selectedWeek);
+
+    const prevBtn = document.getElementById("prevWeekBtn");
+    const nextBtn = document.getElementById("nextWeekBtn");
+
+    if (prevBtn && !prevBtn.dataset.listenerAttached) {
+        prevBtn.dataset.listenerAttached = "true";
+        prevBtn.addEventListener("click", () => {
+            selectedWeek--;
+            loadWeek(selectedWeek);
+        });
+    }
+
+    if (nextBtn && !nextBtn.dataset.listenerAttached) {
+        nextBtn.dataset.listenerAttached = "true";
+        nextBtn.addEventListener("click", () => {
+            selectedWeek++;
+            loadWeek(selectedWeek);
+        });
+    }
+
+    // Global click listener for closing dropdowns/edit boxes outside
+    if (!window.hasGlobalClickBound) {
+        window.hasGlobalClickBound = true;
+        document.addEventListener("click", (e) => {
+            // Handle chef dropdown outside click
+            document.querySelectorAll('[id^="chef-select-box-"]').forEach(box => {
+                const dayName = box.id.replace('chef-select-box-', '');
+                const displayWrap = document.getElementById(`chef-display-wrap-${dayName}`);
+                const chefGroup = displayWrap?.closest('.group\\/chef');
+
+                if (!box.contains(e.target) && !chefGroup?.contains(e.target)) {
+                    cancelChefSelector(dayName);
+                }
+            });
+
+            // Handle meal title edit outside click
+            document.querySelectorAll('[id^="title-edit-"]').forEach(editBox => {
+                const dayName = editBox.id.replace('title-edit-', '');
+                const displayBox = document.getElementById(`title-display-${dayName}`);
+
+                if (!editBox.contains(e.target) && displayBox && !displayBox.contains(e.target)) {
+                    const item = currentPlanMap ? currentPlanMap[dayName] : null;
+                    const mealTitle = (!item || !item.meal_title) ? "Ikke planlagt endnu..." : item.meal_title;
+                    cancelEditMode(dayName, mealTitle, !item || !item.meal_title);
+                }
+            });
+        });
+    }
 }
+
+// Kick off the whole sequence safely
+initCrumbs();
