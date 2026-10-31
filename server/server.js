@@ -27,9 +27,7 @@ http.createServer((req, res) => {
     // Extension Backend Delegation: Iterate through dynamically loaded extension handlers. If a handler matches
     // and processes the request, execution short-circuits and returns.
     for (const handler of extensionHandlers) {
-        if (handler(req, res, parsedUrl, pathname)) {
-            return;
-        }
+        if (handler(req, res, parsedUrl, pathname)) return;
     }
 
     // Static File Serving Fallback: Resolve and serve static web assets from either the /extensions root or the 
@@ -37,37 +35,27 @@ http.createServer((req, res) => {
     let filePath;
     if (pathname.startsWith('/extensions/')) {
         filePath = path.join(process.cwd(), pathname);
+    } else if (pathname === '/' || pathname.startsWith('/?')) {
+        filePath = path.join(PUBLIC_DIR, 'index.html');
     } else {
-        filePath = path.join(PUBLIC_DIR, pathname === '/' || pathname.startsWith('/?') ? 'index.html' : pathname);
+        filePath = path.join(PUBLIC_DIR, pathname);
     }
     
     const extname = path.extname(filePath);
-    let contentType = 'text/html';
-    
-    switch (extname) {
-        case '.js':
-            contentType = 'application/javascript';
-            break;
-        case '.css':
-            contentType = 'text/css';
-            break;
-        case '.json':
-            contentType = 'application/json';
-            break;
-        case '.png':
-            contentType = 'image/png';
-            break;
-        case '.jpg':
-            contentType = 'image/jpg';
-            break;
-    }
+    const contentTypes = {
+        '.js': 'application/javascript',
+        '.css': 'text/css',
+        '.json': 'application/json',
+        '.png': 'image/png',
+        '.jpg': 'image/jpg'
+    };
 
     fs.readFile(filePath, (err, content) => {
         if (err) {
             res.writeHead(404, { 'Content-Type': 'text/plain' });
             res.end('Not found');
         } else {
-            res.writeHead(200, { 'Content-Type': contentType });
+            res.writeHead(200, { 'Content-Type': contentTypes[extname] || 'text/html' });
             res.end(content);
         }
     });
