@@ -1,47 +1,14 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const { loadExtensions } = require('./extensionsManager');
 
 const PORT = 8080;
 const PUBLIC_DIR = path.join(process.cwd(), 'client');
 const EXTENSIONS_DIR = path.join(process.cwd(), 'extensions');
 
-// Runtime extension registries
-const extensionManifests = [];
-const extensionHandlers = [];
-
-
-// Startup Initialization: Scan the /extensions directory for plug-and-play modules,
-// read their manifests, cache metadata, and load backend routers dynamically.
-if (fs.existsSync(EXTENSIONS_DIR)) {
-    const extFolders = fs.readdirSync(EXTENSIONS_DIR, { withFileTypes: true });
-    
-    extFolders.forEach(dirent => {
-        if (dirent.isDirectory()) {
-            const extName = dirent.name;
-            const manifestPath = path.join(EXTENSIONS_DIR, extName, 'manifest.json');
-            const backendPath = path.join(EXTENSIONS_DIR, extName, 'backend.js');
-
-            if (fs.existsSync(manifestPath)) {
-                try {
-                    const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-                    extensionManifests.push(manifest);
-                    console.log(`[Extension] Discovered: ${manifest.name} (v${manifest.version})`);
-
-                    if (fs.existsSync(backendPath)) {
-                        const registerBackend = require(backendPath);
-                        if (typeof registerBackend === 'function') {
-                            extensionHandlers.push(registerBackend);
-                            console.log(`[Extension] Loaded backend for: ${extName}`);
-                        }
-                    }
-                } catch (err) {
-                    console.error(`[Extension] Failed to load extension ${extName}:`, err.message);
-                }
-            }
-        }
-    });
-}
+// Load extension manifests and handlers via the separate manager module
+const { extensionManifests, extensionHandlers } = loadExtensions(EXTENSIONS_DIR);
 
 // HTTP Server Core Request Lifecycle
 http.createServer((req, res) => {
