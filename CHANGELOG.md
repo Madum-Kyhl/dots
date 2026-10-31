@@ -4,6 +4,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.1] - 2026-10-31
+
+### Changed
+
+- Refacteder out `extensionsManager` from `server`.
+- Support for toggling apps off.
+
 ## [0.5.0] - 2026-10-30
 
 ### Changed
