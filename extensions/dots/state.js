@@ -1,5 +1,10 @@
 export let dots = [];
 
+// Expose a read-only getter to prevent direct external mutations
+export function getDots() {
+    return dots;
+}
+
 export async function loadDots() {
     try {
         const response = await fetch('/api/dots');
